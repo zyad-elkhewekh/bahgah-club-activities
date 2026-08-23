@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختبار سكراتش الشامل: أحداث · تحكم · رسائل وقوائم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&family=Fira+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stage: #4d4d4d;
+    --paper: #fbfbf9;
+    --panel: #ffffff;
+    --ink: #2b2b2b;
+    --sub: #6b6b6b;
+
+    --c-events: #FFC93E;
+    --c-events-dark: #C9930B;
+    --c-motion: #4C8DFF;
+    --c-motion-dark: #2C63D6;
+    --c-control: #FFAB19;
+    --c-control-dark: #CC7A00;
+    --c-messages: #17A398;
+    --c-messages-dark: #0F7C69;
+
+    --good: #59C059;
+    --good-dark: #389438;
+    --bad: #EE7D16;
+    --bad-dark: #CC5B00;
+
+    --notch: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 8%, #5a5a5a 0%, transparent 45%),
+      repeating-linear-gradient(0deg, #464646 0 1px, #4d4d4d 1px 26px),
+      repeating-linear-gradient(90deg, #464646 0 1px, #4d4d4d 1px 26px);
+    font-family: 'Tajawal', system-ui, sans-serif;
+    color: var(--ink);
+    padding: 28px 16px 60px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .wrap{ width:100%; max-width:680px; }
+
+  .backlink{
+    display:inline-flex; align-items:center; gap:6px;
+    font-weight:700; font-size:13px; text-decoration:none;
+    color:#CFD3EE; opacity:.85; margin-bottom:12px;
+  }
+
+  .titlebar{
+    background: var(--panel);
+    border-radius: 14px 14px 0 0;
+    padding: 18px 22px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    box-shadow: 0 2px 0 rgba(0,0,0,.15);
+  }
+  .cat-dot{ width:16px; height:16px; border-radius:50%; background:conic-gradient(var(--c-events) 0 25%, var(--c-motion) 25% 50%, var(--c-control) 50% 75%, var(--c-messages) 75% 100%); flex:none; }
+  .titlebar h1{
+    margin:0; font-size: 1.3rem; font-weight:800; letter-spacing:.2px;
+  }
+  .titlebar p{ margin:2px 0 0; font-size:.85rem; color:var(--sub); font-weight:500;}
+
+  .stagecard{
+    background: var(--paper);
+    border-radius: 0 0 14px 14px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  .progress-row{ display:flex; align-items:center; gap:10px; margin-bottom:18px; font-family:'Fira Mono', monospace; font-size:.8rem; color:var(--sub);}
+  .progress-track{ flex:1; height:10px; background:#e7e5df; border-radius:6px; overflow:hidden; }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--c-events), var(--c-motion), var(--c-control), var(--c-messages)); width:0%; transition: width .35s ease; }
+  .score-pill{ font-weight:700; color: var(--ink); background:#fff; border:2px solid #e7e5df; padding:2px 10px; border-radius:999px; }
+
+  .sblock{
+    position: relative;
+    border-radius: 9px;
+    padding: 16px 18px 16px 18px;
+    color:#fff;
+    font-weight:700;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18), 0 3px 6px rgba(0,0,0,.2);
+  }
+  .sblock::before{
+    content:"";
+    position:absolute;
+    top:-8px; right:22px;
+    width: 34px; height: 10px;
+    background: inherit;
+    border-radius: 6px 6px 0 0;
+  }
+
+  .cat-label{
+    display:inline-block; font-size:.7rem;
+    background: rgba(255,255,255,.28); padding: 2px 8px; border-radius: 5px; margin-bottom:8px; font-weight:800;
+    direction:ltr;
+  }
+  .type-label{
+    display:inline-block; font-size:.68rem;
+    background: rgba(0,0,0,.2); padding: 2px 8px; border-radius: 5px; margin-bottom:8px; margin-left:6px; font-weight:800;
+    direction:ltr;
+  }
+  .qtext{ font-size:1.03rem; line-height:1.6; font-weight:700; }
+  .qnum{ opacity:.85; font-weight:800; margin-left:6px; }
+
+  /* ---------- MCQ + snippet answers ---------- */
+  .answers{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
+  .ans{
+    position:relative;
+    text-align:right;
+    background:#fff;
+    border:2px solid #d9d7cf;
+    border-radius: 8px;
+    padding: 12px 34px 12px 16px;
+    font-family:'Tajawal', sans-serif;
+    font-weight:600;
+    font-size:.95rem;
+    color: var(--ink);
+    cursor:pointer;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    width:100%;
+  }
+  .ans::before{
+    content:"";
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    width:10px; height:10px; border-radius:50%;
+    background: #d9d7cf;
+  }
+  .ans:hover:not(:disabled){ transform: translateX(-3px); border-color:#b8b6ac; }
+  .ans:focus-visible{ outline: 3px solid #4C97FF; outline-offset:2px; }
+  .ans:disabled{ cursor:default; }
+
+  .ans.correct{ border-color: var(--good-dark); background: #eafbea; }
+  .ans.correct::before{ background: var(--good); }
+  .ans.wrong{ border-color: var(--bad-dark); background: #fdeee2; }
+  .ans.wrong::before{ background: var(--bad); }
+  .ans.dim{ opacity:.55; }
+
+  /* ---------- snippet-complete ---------- */
+  .snippet-stack{ margin-top:14px; display:flex; flex-direction:column; gap:6px; direction:ltr; }
+  .snip-line{
+    font-family:'Fira Mono', monospace; font-size:.82rem;
+    background:#3b3b3b; color:#f2f2f2; padding:8px 12px; border-radius:6px;
+    border-inline-start:4px solid #666;
+  }
+  .snip-blank{
+    font-family:'Fira Mono', monospace; font-size:.82rem;
+    background:#2b2b2b; color:#ffd479; padding:8px 12px; border-radius:6px;
+    border:2px dashed #ffd479; text-align:center; font-weight:700;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .snip-blank.filled-correct{ background:#1f3d24; border-color:var(--good); color:#b6f3b6; border-style:solid; }
+  .snip-blank.filled-wrong{ background:#3d241f; border-color:var(--bad); color:#f3c9b6; border-style:solid; }
+
+  /* ---------- matching ---------- */
+  .match-wrap{ margin-top:16px; }
+  .match-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media(max-width:520px){ .match-grid{ grid-template-columns:1fr; } }
+  .match-col-label{ font-size:.72rem; color:var(--sub); font-weight:800; margin-bottom:8px; text-transform:uppercase; letter-spacing:.03em; direction:ltr; }
+  .match-item{
+    display:block; width:100%; text-align:right;
+    background:#fff; border:2px solid #d9d7cf; border-radius:8px;
+    padding:10px 14px; margin-bottom:8px; cursor:pointer;
+    font-family:'Tajawal', sans-serif; font-weight:600; font-size:.85rem; color:var(--ink);
+    transition: border-color .12s ease, transform .12s ease;
+  }
+  .match-item.termcell{ font-family:'Fira Mono', monospace; direction:ltr; text-align:left; font-size:.78rem; font-weight:700; }
+  .match-item:hover:not(:disabled){ border-color:#b8b6ac; transform:translateX(-2px); }
+  .match-item.selected{ border-color:#4C97FF; background:#eaf2ff; }
+  .match-item.correct{ border-color:var(--good-dark); background:#eafbea; cursor:default; opacity:.85; }
+  .match-item.wrong{ animation: shake .3s; border-color:var(--bad-dark); }
+  .match-item:disabled{ cursor:default; }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);} 75%{transform:translateX(5px);} }
+  .match-status{ margin-top:8px; font-family:'Fira Mono', monospace; font-size:.78rem; color:var(--sub); direction:ltr; text-align:left; }
+
+  .feedback{
+    margin-top: 14px;
+    font-size: .88rem;
+    font-weight:600;
+    padding: 10px 14px;
+    border-radius: 8px;
+    display:none;
+    line-height:1.6;
+  }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:#eafbea; color: var(--good-dark); border:2px solid var(--good); }
+  .feedback.wrong{ background:#fdeee2; color: var(--bad-dark); border:2px solid var(--bad); }
+
+  .nextbtn{
+    margin-top:16px;
+    display:none;
+    font-family:'Tajawal', sans-serif;
+    font-weight:800;
+    font-size: .95rem;
+    color:#fff;
+    background: var(--stage);
+    border:none;
+    padding: 10px 20px;
+    border-radius: 24px;
+    cursor:pointer;
+    box-shadow: 0 3px 0 #333;
+  }
+  .nextbtn:active{ transform: translateY(2px); box-shadow: 0 1px 0 #333; }
+  .nextbtn.show{ display:inline-block; }
+
+  .results{ display:none; text-align:center; }
+  .results.show{ display:block; }
+  .results .flag{
+    display:inline-block; background: linear-gradient(135deg, var(--c-motion), var(--c-messages));
+    color:#fff; font-weight:800; padding: 8px 20px; border-radius:999px; font-size:.85rem; margin-bottom:14px;
+  }
+  .results h2{ margin:0 0 6px; font-size:1.6rem; }
+  .results p{ color:var(--sub); font-weight:600; margin:0 0 20px; }
+  .bigscore{ font-family:'Fira Mono', monospace; font-size:2.6rem; font-weight:700; margin-bottom: 6px; }
+  .retrybtn{
+    font-family:'Tajawal', sans-serif; font-weight:800; font-size:.95rem; color:#fff;
+    background: var(--c-messages-dark); border:none; padding: 12px 26px; border-radius:24px; cursor:pointer;
+    box-shadow: 0 3px 0 #0a5347; margin-top: 8px;
+  }
+  .retrybtn:active{ transform: translateY(2px); box-shadow: 0 1px 0 #0a5347; }
+
+  .quizbody{ position:relative; }
+
+  footer{ text-align:center; margin-top: 16px; color:#b9b9b9; font-size:.72rem; font-family:'Fira Mono', monospace; direction:ltr; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="backlink" href="scratch.html">→ العودة إلى مسار سكراتش</a>
+
+  <div class="titlebar">
+    <div class="cat-dot"></div>
+    <div>
+      <h1>اختبار سكراتش الشامل</h1>
+      <p>أحداث · تحكم · رسائل وقوائم — ٦ أسئلة بأنواع مختلفة</p>
+    </div>
+  </div>
+
+  <div class="stagecard">
+    <div class="progress-row">
+      <span id="qcounter">السؤال ١ / ٦</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="score-pill" id="scorePill">النتيجة: ٠</span>
+    </div>
+
+    <div class="quizbody" id="quizArea" aria-live="polite"></div>
+
+    <div class="results" id="results">
+      <span class="flag">انتهى الاختبار</span>
+      <div class="bigscore" id="finalScore">0 / 6</div>
+      <h2 id="resultTitle">أحسنت!</h2>
+      <p id="resultSub">إليك نتيجتك.</p>
+      <button class="retrybtn" id="retryBtn">إعادة المحاولة</button>
+    </div>
+  </div>
+
+  <footer>MCQ · Complete the snippet · Matching</footer>
+</div>
+
+<script>
+const CAT_META = {
+  events:   { label: "Events",   color: "var(--c-events)",   dark: "var(--c-events-dark)" },
+  motion:   { label: "Motion",   color: "var(--c-motion)",   dark: "var(--c-motion-dark)" },
+  control:  { label: "Control",  color: "var(--c-control)",  dark: "var(--c-control-dark)" },
+  messages: { label: "Messages", color: "var(--c-messages)", dark: "var(--c-messages-dark)" }
+};
+const TYPE_META = {
+  mcq: "اختيار من متعدد",
+  snippet: "أكمل السكربت",
+  match: "طابق"
+};
+
+const QUESTIONS = [
+  {
+    type: "mcq",
+    cat: "events",
+    text: "تريد أن يبدأ السكربت تلقائيًا فور الضغط على زر تشغيل المشروع، بدون أي نقر على القطة نفسها. ما البلوك المناسب لبداية هذا السكربت؟",
+    options: [
+      "when this sprite clicked",
+      "when green flag clicked",
+      "when I receive [message]",
+      "forever"
+    ],
+    correct: 1,
+    why: "block 'when green flag clicked' يشغّل السكربت تلقائيًا بمجرد الضغط على العلم الأخضر لتشغيل المشروع، دون الحاجة لأي تفاعل آخر من اللاعب."
+  },
+  {
+    type: "snippet",
+    cat: "motion",
+    text: "أكمل السكربت التالي الذي يعيد القطة إلى نقطة البداية ثم يرحّب باللاعب:",
+    lines: [
+      "when green flag clicked",
+      "show",
+      "__BLANK__",
+      "say [Let's play!] for 2 seconds"
+    ],
+    options: [
+      "go to x: 0 y: 0",
+      "hide",
+      "next costume",
+      "wait 1 seconds"
+    ],
+    correct: 0,
+    why: "قبل الترحيب باللاعب لازم نحدد موضع بداية ثابت للقطة، لذلك نستخدم block 'go to x: 0 y: 0' لإعادتها إلى نقطة الانطلاق قبل عرض الرسالة."
+  },
+  {
+    type: "match",
+    cat: "control",
+    text: "طابق كل بلوك تحكّم مع وظيفته الصحيحة:",
+    pairs: [
+      { term: "forever", desc: "يكرر البلوكات بداخله بلا نهاية" },
+      { term: "if <> then", desc: "ينفّذ البلوكات بداخله فقط عند تحقق الشرط" },
+      { term: "repeat until <>", desc: "يكرر حتى يتحقق الشرط، ثم يتوقف" },
+      { term: "wait until <>", desc: "يوقف السكربت حتى يتحقق الشرط، ثم يكمل" }
+    ],
+    why: "كل بلوك تحكّم له طريقة مختلفة للتعامل مع التكرار أو الشروط — مهم تميّز بينها لتبني منطق اللعبة بشكل صحيح."
+  },
+  {
+    type: "mcq",
+    cat: "control",
+    text: "داخل حلقة forever، وضعت block 'if <touching star?> then'. متى تُنفَّذ البلوكات الموجودة بداخل if؟",
+    options: [
+      "في كل مرة تلمس فيها القطة النجمة فقط",
+      "مرة واحدة فقط عند بداية البرنامج",
+      "في كل تكرار من forever، بغض النظر عن اللمس",
+      "لا تُنفَّذ أبدًا داخل forever"
+    ],
+    correct: 0,
+    why: "block 'if' يتحقق من الشرط في كل مرة يصل فيها التنفيذ إليه (هنا: كل تكرار من forever)، وينفّذ ما بداخله فقط عندما يكون الشرط 'touching star?' صحيحًا."
+  },
+  {
+    type: "snippet",
+    cat: "messages",
+    text: "سكربت القطة يبدأ اللعبة ويُعلم بقية السكربتات. أكمل السطر الناقص:",
+    lines: [
+      "when green flag clicked",
+      "set [score] to 0",
+      "__BLANK__"
+    ],
+    options: [
+      "broadcast [start game]",
+      "when I receive [start game]",
+      "delete [1] of [basket]",
+      "length of [basket]"
+    ],
+    correct: 0,
+    why: "لإعلام بقية السكربتات المستقلة ببدء اللعبة، نستخدم block 'broadcast' التي ترسل الرسالة فورًا لكل من ينتظرها بواسطة 'when I receive'."
+  },
+  {
+    type: "match",
+    cat: "messages",
+    text: "طابق كل بلوك من بلوكات القوائم مع وظيفته:",
+    pairs: [
+      { term: "add [thing] to [list]", desc: "يضيف عنصرًا جديدًا في نهاية القائمة" },
+      { term: "delete (1) of [list]", desc: "يحذف عنصرًا محددًا من القائمة برقم موقعه" },
+      { term: "length of [list]", desc: "يعطي عدد العناصر الموجودة في القائمة" },
+      { term: "item (1) of [list]", desc: "يعطي قيمة العنصر الموجود في موقع معيّن" }
+    ],
+    why: "قائمة 'السلة' في لعبتك تحتاج لهذه البلوكات الأربعة للإضافة والحذف والقراءة من القائمة أثناء اللعب."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+
+const quizArea = document.getElementById('quizArea');
+const results = document.getElementById('results');
+const progressFill = document.getElementById('progressFill');
+const qcounter = document.getElementById('qcounter');
+const scorePill = document.getElementById('scorePill');
+
+const ARABIC_DIGITS = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+function toArabicNum(n){ return String(n).split('').map(d => ARABIC_DIGITS[+d] ?? d).join(''); }
+
+function updateHeader(){
+  qcounter.textContent = `السؤال ${toArabicNum(current+1)} / ${toArabicNum(QUESTIONS.length)}`;
+  progressFill.style.width = `${(current/QUESTIONS.length)*100}%`;
+  scorePill.textContent = `النتيجة: ${toArabicNum(score)}`;
+}
+
+function blockHeaderHtml(q){
+  const meta = CAT_META[q.cat];
+  return `
+    <div class="sblock" style="background:${meta.color};">
+      <span class="cat-label">${meta.label}</span><span class="type-label">${TYPE_META[q.type]}</span>
+      <div class="qtext"><span class="qnum">${toArabicNum(current+1)}.</span>${q.text}</div>
+    </div>
+  `;
+}
+
+function finishQuestion(isCorrect, whyText){
+  if(isCorrect) score++;
+  const fb = document.getElementById('feedback');
+  fb.classList.add('show', isCorrect ? 'correct' : 'wrong');
+  fb.textContent = (isCorrect ? '✓ صحيح — ' : '✗ ليست تمامًا — ') + whyText;
+  scorePill.textContent = `النتيجة: ${toArabicNum(score)}`;
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+function render(){
+  const q = QUESTIONS[current];
+  answered = false;
+  updateHeader();
+
+  if(q.type === 'mcq'){ renderMCQ(q); }
+  else if(q.type === 'snippet'){ renderSnippet(q); }
+  else if(q.type === 'match'){ renderMatch(q); }
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    current++;
+    if(current < QUESTIONS.length){ render(); }
+    else { showResults(); }
+  });
+}
+
+function renderMCQ(q){
+  const optionsHtml = q.options.map((opt, i) => `
+    <button class="ans" data-idx="${i}" tabindex="0">${opt}</button>
+  `).join('');
+
+  quizArea.innerHTML = `
+    ${blockHeaderHtml(q)}
+    <div class="answers">${optionsHtml}</div>
+    <div class="feedback" id="feedback" role="status"></div>
+    <button class="nextbtn" id="nextBtn">${current === QUESTIONS.length - 1 ? 'عرض النتيجة' : 'السؤال التالي'} &larr;</button>
+  `;
+
+  const buttons = quizArea.querySelectorAll('.ans');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(answered) return;
+      answered = true;
+      const idx = parseInt(btn.dataset.idx);
+      const isCorrect = idx === q.correct;
+      buttons.forEach((b, i) => {
+        b.disabled = true;
+        if(i === q.correct) b.classList.add('correct');
+        else if(i === idx) b.classList.add('wrong');
+        else b.classList.add('dim');
+      });
+      finishQuestion(isCorrect, q.why);
+    });
+  });
+}
+
+function renderSnippet(q){
+  const linesHtml = q.lines.map(line => {
+    if(line === '__BLANK__') return `<div class="snip-blank" id="blankLine">؟</div>`;
+    return `<div class="snip-line">${line}</div>`;
+  }).join('');
+
+  const optionsHtml = q.options.map((opt, i) => `
+    <button class="ans" data-idx="${i}" tabindex="0">${opt}</button>
+  `).join('');
+
+  quizArea.innerHTML = `
+    ${blockHeaderHtml(q)}
+    <div class="snippet-stack">${linesHtml}</div>
+    <div class="answers">${optionsHtml}</div>
+    <div class="feedback" id="feedback" role="status"></div>
+    <button class="nextbtn" id="nextBtn">${current === QUESTIONS.length - 1 ? 'عرض النتيجة' : 'السؤال التالي'} &larr;</button>
+  `;
+
+  const buttons = quizArea.querySelectorAll('.ans');
+  const blank = document.getElementById('blankLine');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(answered) return;
+      answered = true;
+      const idx = parseInt(btn.dataset.idx);
+      const isCorrect = idx === q.correct;
+      buttons.forEach((b, i) => {
+        b.disabled = true;
+        if(i === q.correct) b.classList.add('correct');
+        else if(i === idx) b.classList.add('wrong');
+        else b.classList.add('dim');
+      });
+      blank.textContent = q.options[idx];
+      blank.classList.add(isCorrect ? 'filled-correct' : 'filled-wrong');
+      finishQuestion(isCorrect, q.why);
+    });
+  });
+}
+
+function renderMatch(q){
+  const descsShuffled = q.pairs.map((p, i) => ({ desc: p.desc, term: p.term, i })).sort(() => Math.random() - 0.5);
+
+  const termsHtml = q.pairs.map((p, i) => `
+    <button class="match-item termcell" data-term-idx="${i}" tabindex="0">${p.term}</button>
+  `).join('');
+  const descsHtml = descsShuffled.map((p) => `
+    <button class="match-item" data-desc-term="${p.i}" tabindex="0">${p.desc}</button>
+  `).join('');
+
+  quizArea.innerHTML = `
+    ${blockHeaderHtml(q)}
+    <div class="match-wrap">
+      <div class="match-grid">
+        <div>
+          <div class="match-col-label">Blocks</div>
+          <div id="matchTerms">${termsHtml}</div>
+        </div>
+        <div>
+          <div class="match-col-label">الوظيفة</div>
+          <div id="matchDescs">${descsHtml}</div>
+        </div>
+      </div>
+      <div class="match-status" id="matchStatus">0 / ${q.pairs.length} matched</div>
+    </div>
+    <div class="feedback" id="feedback" role="status"></div>
+    <button class="nextbtn" id="nextBtn">${current === QUESTIONS.length - 1 ? 'عرض النتيجة' : 'السؤال التالي'} &larr;</button>
+  `;
+
+  let selectedTermIdx = null;
+  let matchedCount = 0;
+  const termBtns = quizArea.querySelectorAll('#matchTerms .match-item');
+  const descBtns = quizArea.querySelectorAll('#matchDescs .match-item');
+  const statusEl = document.getElementById('matchStatus');
+
+  termBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(btn.disabled) return;
+      termBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedTermIdx = parseInt(btn.dataset.termIdx);
+    });
+  });
+
+  descBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(btn.disabled || selectedTermIdx === null) return;
+      const descTermIdx = parseInt(btn.dataset.descTerm);
+      const termBtn = quizArea.querySelector(`#matchTerms [data-term-idx="${selectedTermIdx}"]`);
+
+      if(descTermIdx === selectedTermIdx){
+        btn.classList.remove('selected');
+        btn.classList.add('correct');
+        btn.disabled = true;
+        termBtn.classList.remove('selected');
+        termBtn.classList.add('correct');
+        termBtn.disabled = true;
+        matchedCount++;
+        statusEl.textContent = `${matchedCount} / ${q.pairs.length} matched`;
+        selectedTermIdx = null;
+
+        if(matchedCount === q.pairs.length){
+          answered = true;
+          finishQuestion(true, q.why);
+        }
+      } else {
+        btn.classList.add('wrong');
+        termBtn.classList.add('wrong');
+        setTimeout(() => {
+          btn.classList.remove('wrong');
+          termBtn.classList.remove('wrong', 'selected');
+        }, 300);
+        selectedTermIdx = null;
+      }
+    });
+  });
+}
+
+function showResults(){
+  progressFill.style.width = '100%';
+  qcounter.textContent = `السؤال ${toArabicNum(QUESTIONS.length)} / ${toArabicNum(QUESTIONS.length)}`;
+  quizArea.style.display = 'none';
+  results.classList.add('show');
+  document.getElementById('finalScore').textContent = `${toArabicNum(score)} / ${toArabicNum(QUESTIONS.length)}`;
+
+  let title, sub;
+  if(score === QUESTIONS.length){ title = "نتيجة كاملة!"; sub = "أتقنت الأحداث والتحكم والرسائل والقوائم تمامًا."; }
+  else if(score >= QUESTIONS.length * 0.75){ title = "عمل رائع!"; sub = "لديك فهم قوي لهذه المفاهيم."; }
+  else if(score >= QUESTIONS.length * 0.5){ title = "بداية جيدة"; sub = "بعض التمرين الإضافي سيساعدك على الإتقان."; }
+  else { title = "واصل التمرين"; sub = "راجع الألغاز الثلاثة في مسار سكراتش، ثم أعد المحاولة."; }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSub').textContent = sub;
+}
+
+document.getElementById('retryBtn').addEventListener('click', () => {
+  current = 0; score = 0;
+  results.classList.remove('show');
+  quizArea.style.display = 'block';
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
