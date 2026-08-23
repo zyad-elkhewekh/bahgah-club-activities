@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تحدي أوامر PictoBlox بايثون</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&family=Tajawal:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0c1f1b;
+    --bg-2: #10281f;
+    --panel: #143329;
+    --panel-2: #17392d;
+    --line: #235240;
+    --lime: #c6ff3d;
+    --amber: #ffb84d;
+    --red: #ff6b6b;
+    --text: #eaf5ef;
+    --text-dim: #9fc4b3;
+    --mono: 'JetBrains Mono', monospace;
+    --disp: 'Cairo', sans-serif;
+    --body: 'Tajawal', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(198,255,61,0.07), transparent 40%),
+      radial-gradient(circle at 85% 10%, rgba(255,184,77,0.06), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.7;
+  }
+  ::selection{ background:var(--lime); color:#0c1f1b; }
+
+  /* ---------- layout shell ---------- */
+  .wrap{ max-width:980px; margin:0 auto; padding:0 20px 100px; }
+
+  header.hero{
+    padding:64px 20px 40px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .chip-row{
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:22px;
+  }
+  .chip{
+    font-family:var(--mono); font-size:12.5px; color:var(--lime);
+    border:1px solid var(--line); background:rgba(198,255,61,0.06);
+    padding:5px 12px; border-radius:20px; letter-spacing:.3px;
+  }
+  h1.title{
+    font-family:var(--disp); font-weight:900; font-size:clamp(32px,6vw,54px);
+    margin:0 0 14px; color:var(--text);
+    letter-spacing:-0.5px;
+  }
+  h1.title span{ color:var(--lime); }
+  .subtitle{
+    color:var(--text-dim); font-size:17px; max-width:560px; margin:0 auto;
+  }
+
+  /* signature: connecting block strip */
+  .block-strip{ display:flex; justify-content:center; margin:34px 0 6px; direction:ltr; }
+  .block-strip .blk{
+    font-family:var(--mono); font-size:13px; color:#0c1f1b; background:var(--lime);
+    padding:9px 16px; position:relative; font-weight:700;
+    clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%, 12% 50%);
+    margin-inline-start:-14px;
+  }
+  .block-strip .blk:first-child{ margin-inline-start:0; clip-path: polygon(0 0,88% 0,100% 50%,88% 100%,0 100%); }
+  .block-strip .blk:nth-child(2){ background:var(--amber); }
+  .block-strip .blk:nth-child(3){ background:#7fe0ff; }
+  .block-strip .blk:nth-child(4){ background:#ff9ecf; }
+
+  section{ margin-top:78px; }
+  .eyebrow{
+    font-family:var(--mono); color:var(--amber); font-size:12.5px;
+    letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;
+  }
+  h2.sec-title{
+    font-family:var(--disp); font-weight:800; font-size:clamp(22px,4vw,30px);
+    margin:0 0 8px;
+  }
+  .sec-desc{ color:var(--text-dim); margin-bottom:30px; max-width:640px; }
+
+  /* ---------- flashcards ---------- */
+  .cards{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:16px;
+  }
+  .card{
+    perspective:1200px; height:158px; cursor:pointer;
+  }
+  .card-inner{
+    position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1);
+    transform-style:preserve-3d;
+  }
+  .card.flipped .card-inner{ transform:rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:12px; padding:16px 18px; display:flex; flex-direction:column;
+    justify-content:center; border:1px solid var(--line);
+  }
+  .face.front{
+    background:var(--panel);
+  }
+  .face.front .cmd{
+    font-family:var(--mono); font-size:15px; color:var(--lime); font-weight:700;
+    word-break:break-word;
+  }
+  .face.front .tap{ margin-top:10px; font-size:11.5px; color:var(--text-dim); font-family:var(--mono); }
+  .face.back{
+    background:var(--panel-2); transform:rotateY(180deg);
+    font-size:13.5px; color:var(--text);
+  }
+
+  /* ---------- matching game ---------- */
+  .match-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:28px;
+  }
+  @media(max-width:680px){ .match-grid{ grid-template-columns:1fr; } }
+  .match-col-label{ font-family:var(--mono); font-size:12px; color:var(--text-dim); margin-bottom:10px; letter-spacing:1px;}
+  .match-item{
+    font-family:var(--mono); font-size:13.5px; padding:12px 14px; margin-bottom:8px;
+    background:var(--panel); border:1.5px solid var(--line); border-radius:9px;
+    cursor:pointer; transition:.15s; user-select:none;
+  }
+  .match-item.desc-item{ font-family:var(--body); font-size:14px; }
+  .match-item:hover{ border-color:var(--lime); }
+  .match-item.selected{ border-color:var(--amber); background:rgba(255,184,77,0.1); }
+  .match-item.correct{ border-color:var(--lime); background:rgba(198,255,61,0.12); cursor:default; }
+  .match-item.wrong{ border-color:var(--red); animation:shake .3s; }
+  @keyframes shake{ 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  .match-status{ margin-top:18px; font-family:var(--mono); font-size:13px; color:var(--text-dim); }
+
+  /* ---------- quiz ---------- */
+  .quiz-shell{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:30px;
+  }
+  .progress-bar{ height:6px; background:var(--bg-2); border-radius:4px; overflow:hidden; margin-bottom:26px; }
+  .progress-fill{ height:100%; background:var(--lime); width:0%; transition:width .3s; }
+  .q-count{ font-family:var(--mono); color:var(--text-dim); font-size:12.5px; margin-bottom:10px; }
+  .q-text{ font-size:18px; font-weight:600; margin-bottom:22px; }
+  .q-text code, .q-text .code-inline{
+    font-family:var(--mono); background:var(--bg-2); color:var(--amber);
+    padding:2px 8px; border-radius:6px; font-size:15px; direction:ltr; display:inline-block;
+  }
+  .opts{ display:flex; flex-direction:column; gap:10px; }
+  .opt{
+    text-align:right; font-family:var(--body); font-size:15px; padding:13px 16px;
+    background:var(--bg-2); border:1.5px solid var(--line); border-radius:10px; cursor:pointer;
+    color:var(--text); transition:.15s;
+  }
+  .opt:hover{ border-color:var(--lime); }
+  .opt.chosen-correct{ border-color:var(--lime); background:rgba(198,255,61,0.14); }
+  .opt.chosen-wrong{ border-color:var(--red); background:rgba(255,107,107,0.12); }
+  .opt.reveal-correct{ border-color:var(--lime); }
+  .opt[disabled]{ cursor:default; }
+  .explain{
+    margin-top:16px; font-size:13.5px; color:var(--text-dim); background:var(--bg-2);
+    border-radius:10px; padding:12px 14px; display:none;
+  }
+  .explain.show{ display:block; }
+  .quiz-nav{ display:flex; justify-content:flex-end; margin-top:22px; }
+  .btn{
+    font-family:var(--disp); font-weight:700; font-size:14.5px; padding:11px 26px;
+    background:var(--lime); color:#0c1f1b; border:none; border-radius:30px; cursor:pointer;
+    transition:.15s;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(198,255,61,0.25); }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn.secondary{ background:transparent; border:1.5px solid var(--line); color:var(--text); }
+
+  .result{ text-align:center; }
+  .result .score{ font-family:var(--disp); font-weight:900; font-size:56px; color:var(--lime); }
+  .result .score small{ font-size:22px; color:var(--text-dim); }
+  .result p{ color:var(--text-dim); margin-top:6px; }
+
+  footer{
+    text-align:center; padding:40px 20px; color:var(--text-dim); font-size:13px;
+    font-family:var(--mono); border-top:1px solid var(--line); margin-top:80px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <a href="pictoblox.html" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13.5px;text-decoration:none;color:inherit;opacity:.75;margin-bottom:14px;">→ العودة إلى مسار PictoBlox وبايثون</a>
+  <div class="chip-row">
+    <span class="chip">PictoBlox</span>
+    <span class="chip">Python</span>
+    <span class="chip">Sprite</span>
+  </div>
+  <h1 class="title">تحدي أوامر <span>PictoBlox</span></h1>
+  <p class="subtitle">تدرّب على أوامر بايثون في PictoBlox عن طريق البطاقات، لعبة المطابقة، والاختبار السريع.</p>
+  <div class="block-strip">
+    <span class="blk">sprite.gotoxy()</span>
+    <span class="blk">sprite.say()</span>
+    <span class="blk">random.randint()</span>
+    <span class="blk">time.sleep()</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ FLASHCARDS ============ -->
+  <section id="cards-section">
+    <div class="eyebrow">01 — مراجعة</div>
+    <h2 class="sec-title">بطاقات الأوامر</h2>
+    <p class="sec-desc">اضغط على أي بطاقة لقلبها ومشاهدة شرح الأمر.</p>
+    <div class="cards" id="cardsGrid"></div>
+  </section>
+
+  <!-- ============ MATCHING GAME ============ -->
+  <section id="match-section">
+    <div class="eyebrow">02 — طابق</div>
+    <h2 class="sec-title">لعبة المطابقة</h2>
+    <p class="sec-desc">اختر أمرًا من العمود الأيمن ثم اختر الشرح المطابق له من العمود الأيسر.</p>
+    <div class="match-grid">
+      <div>
+        <div class="match-col-label">الأوامر</div>
+        <div id="matchCommands"></div>
+      </div>
+      <div>
+        <div class="match-col-label">الشرح</div>
+        <div id="matchDescs"></div>
+      </div>
+    </div>
+    <div class="match-status" id="matchStatus">0 / 9 تم المطابقة بنجاح</div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="quiz-section">
+    <div class="eyebrow">03 — اختبر نفسك</div>
+    <h2 class="sec-title">اختبار سريع</h2>
+    <p class="sec-desc">أجب عن الأسئلة التالية بناءً على أوامر PictoBlox التي راجعتها.</p>
+
+    <div class="quiz-shell">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div id="quizBody"></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>built for practicing PictoBlox · sprite.say("bye!")</footer>
+
+<script>
+/* ======================= DATA ======================= */
+const commands = [
+  { cmd: "Sprite('الاسم')", desc: "تُنشئ عنصر رسومي (شخصية أو صورة) في اللعبة، وتعطيه اسمًا مثل 'Tobi' أو 'Apple'." },
+  { cmd: "sprite.gotoxy(x, y)", desc: "تنقل الشخصية إلى مكان محدد على الشاشة باستخدام إحداثيات x و y." },
+  { cmd: "sprite.setsize(رقم)", desc: "تغيّر حجم الشخصية، الرقم يمثل النسبة المئوية (مثلاً 70 يعني 70% من الحجم الأصلي)." },
+  { cmd: "sprite.changex(رقم)", desc: "تحرّك الشخصية أفقيًا بمقدار الرقم المحدد. رقم موجب يحركها لليمين، وسالب لليسار." },
+  { cmd: "sprite.changey(رقم)", desc: "تحرّك الشخصية عموديًا بمقدار الرقم. رقم موجب يحركها لأعلى، وسالب لأسفل." },
+  { cmd: 'sprite.say("نص")', desc: 'تجعل الشخصية "تتكلم" أو تعرض نصًا/رقمًا فوقها (مثل فقاعة الكلام).' },
+  { cmd: 'sprite.istouching("اسم")', desc: 'تتحقق (بترجع True أو False) إذا كانت الشخصية تلمس شخصية أخرى أو حافة الشاشة "edge".' },
+  { cmd: 'sprite.iskeypressed("اسم المفتاح")', desc: 'تتحقق إذا كان المستخدم يضغط على مفتاح معين في الكيبورد (مثل "right arrow").' },
+  { cmd: "random.randint(أ, ب)", desc: "تولّد رقمًا عشوائيًا صحيحًا بين القيمتين أ و ب." },
+  { cmd: "time.sleep(رقم)", desc: "توقف تنفيذ الكود لفترة زمنية قصيرة (بالثواني)، تُستخدم لجعل الحركة سلسة." }
+];
+
+const quizQuestions = [
+  {
+    q: "أي أمر يُستخدم لنقل الشخصية إلى موقع محدد على الشاشة؟",
+    opts: ["sprite.changex(10)", "sprite.gotoxy(100, 50)", "sprite.setsize(50)", "sprite.say(\"هنا\")"],
+    correct: 1,
+    explain: "gotoxy(x, y) ينقل الشخصية مباشرة إلى الإحداثيات المحددة، بعكس changex/changey اللذان يحركانها بمقدار نسبي."
+  },
+  {
+    q: "ماذا يفعل sprite.changex(-5) بالضبط؟",
+    opts: ["يحرك الشخصية 5 خطوات لليمين", "يحرك الشخصية 5 خطوات لليسار", "يغيّر حجم الشخصية", "يجعل الشخصية تختفي"],
+    correct: 1,
+    explain: "الرقم السالب مع changex يحرك الشخصية لليسار، بينما الرقم الموجب يحركها لليمين."
+  },
+  {
+    q: "كود <span class='code-inline'>random.randint(1, 10)</span> يولّد:",
+    opts: ["رقمًا عشوائيًا بين 1 و10 فقط", "رقمًا عشوائيًا صحيحًا بين 1 و10 (شامل الطرفين)", "قائمة من 10 أرقام", "رقمًا عشوائيًا عشريًا"],
+    correct: 1,
+    explain: "randint(a, b) يولّد عددًا صحيحًا عشوائيًا، ويشمل كلا الطرفين a و b."
+  },
+  {
+    q: "أي دالة تتحقق مما إذا كانت الشخصية تلمس حافة الشاشة؟",
+    opts: ["sprite.iskeypressed(\"edge\")", "sprite.istouching(\"edge\")", "sprite.gotoxy(\"edge\")", "sprite.say(\"edge\")"],
+    correct: 1,
+    explain: "istouching(\"edge\") تُستخدم للتحقق من ملامسة حافة الشاشة، وترجع True أو False."
+  },
+  {
+    q: "لماذا نستخدم time.sleep(رقم) في كود اللعبة؟",
+    opts: ["لإيقاف اللعبة نهائيًا", "لتوليد رقم عشوائي", "لإيقاف تنفيذ الكود مؤقتًا لجعل الحركة سلسة", "لتغيير حجم الشخصية"],
+    correct: 2,
+    explain: "sleep توقف تنفيذ السطر التالي لفترة قصيرة، مما يمنع الحركة من أن تكون سريعة جدًا وغير مرئية."
+  },
+  {
+    q: "ما الفرق بين sprite.changex() و sprite.gotoxy()؟",
+    opts: [
+      "لا فرق، هما نفس الأمر",
+      "changex تحرك بمقدار نسبي، وgotoxy تنقل لموقع مطلق محدد",
+      "changex فقط للحركة العمودية",
+      "gotoxy لا يعمل مع sprite"
+    ],
+    correct: 1,
+    explain: "changex/changey يضيفان قيمة إلى الموقع الحالي (حركة نسبية)، بينما gotoxy يحدد الموقع الجديد مباشرة (حركة مطلقة)."
+  },
+  {
+    q: "أي أمر يُستخدم لإنشاء شخصية جديدة في المشروع؟",
+    opts: ["sprite.setsize()", "Sprite('الاسم')", "sprite.say()", "random.randint()"],
+    correct: 1,
+    explain: "Sprite('الاسم') هو الأمر الذي يُنشئ عنصرًا رسوميًا جديدًا ويعطيه اسمًا."
+  },
+  {
+    q: "ماذا ترجع sprite.iskeypressed(\"right arrow\") عند عدم الضغط على المفتاح؟",
+    opts: ["True", "False", "0", "None"],
+    correct: 1,
+    explain: "الدالة ترجع قيمة منطقية (Boolean)؛ إن لم يكن المفتاح مضغوطًا فإنها ترجع False."
+  }
+];
+
+/* ======================= FLASHCARDS ======================= */
+const cardsGrid = document.getElementById('cardsGrid');
+commands.forEach(c => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="face front">
+        <div class="cmd">${escapeHtml(c.cmd)}</div>
+        <div class="tap">اضغط لعرض الشرح ↺</div>
+      </div>
+      <div class="face back">${escapeHtml(c.desc)}</div>
+    </div>`;
+  card.addEventListener('click', () => card.classList.toggle('flipped'));
+  cardsGrid.appendChild(card);
+});
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ======================= MATCHING GAME ======================= */
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+const shuffledCmds = shuffle(commands);
+const shuffledDescs = shuffle(commands);
+
+const matchCommandsEl = document.getElementById('matchCommands');
+const matchDescsEl = document.getElementById('matchDescs');
+const matchStatusEl = document.getElementById('matchStatus');
+
+let selectedCmd = null;
+let matchedCount = 0;
+
+shuffledCmds.forEach(c => {
+  const el = document.createElement('div');
+  el.className = 'match-item';
+  el.textContent = c.cmd;
+  el.dataset.cmd = c.cmd;
+  el.addEventListener('click', () => onCmdClick(el, c));
+  matchCommandsEl.appendChild(el);
+});
+
+shuffledDescs.forEach(c => {
+  const el = document.createElement('div');
+  el.className = 'match-item desc-item';
+  el.textContent = c.desc;
+  el.dataset.cmd = c.cmd;
+  el.addEventListener('click', () => onDescClick(el, c));
+  matchDescsEl.appendChild(el);
+});
+
+function onCmdClick(el, c){
+  if(el.classList.contains('correct')) return;
+  document.querySelectorAll('#matchCommands .match-item').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCmd = { el, cmd: c.cmd };
+}
+
+function onDescClick(el, c){
+  if(el.classList.contains('correct') || !selectedCmd) return;
+  if(selectedCmd.cmd === c.cmd){
+    selectedCmd.el.classList.remove('selected');
+    selectedCmd.el.classList.add('correct');
+    el.classList.add('correct');
+    matchedCount++;
+    matchStatusEl.textContent = `${matchedCount} / ${commands.length} تم المطابقة بنجاح`;
+    if(matchedCount === commands.length){
+      matchStatusEl.textContent = `🎉 أحسنت! طابقت كل الأوامر (${commands.length}/${commands.length})`;
+    }
+  } else {
+    el.classList.add('wrong');
+    setTimeout(() => el.classList.remove('wrong'), 300);
+  }
+  selectedCmd = null;
+}
+
+/* ======================= QUIZ ======================= */
+let qIndex = 0;
+let score = 0;
+let answered = false;
+const quizBody = document.getElementById('quizBody');
+const progressFill = document.getElementById('progressFill');
+
+function renderQuestion(){
+  answered = false;
+  const total = quizQuestions.length;
+  progressFill.style.width = `${(qIndex/total)*100}%`;
+  const item = quizQuestions[qIndex];
+
+  quizBody.innerHTML = `
+    <div class="q-count">سؤال ${qIndex+1} من ${total}</div>
+    <div class="q-text">${item.q}</div>
+    <div class="opts" id="optsWrap"></div>
+    <div class="explain" id="explainBox">${item.explain}</div>
+    <div class="quiz-nav"><button class="btn" id="nextBtn" disabled>التالي</button></div>
+  `;
+
+  const optsWrap = document.getElementById('optsWrap');
+  item.opts.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.addEventListener('click', () => selectOption(i, item));
+    optsWrap.appendChild(b);
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+}
+
+function selectOption(i, item){
+  if(answered) return;
+  answered = true;
+  const opts = document.querySelectorAll('#optsWrap .opt');
+  opts.forEach((b, idx) => {
+    b.disabled = true;
+    if(idx === item.correct) b.classList.add('reveal-correct');
+    if(idx === i && idx === item.correct) b.classList.add('chosen-correct');
+    if(idx === i && idx !== item.correct) b.classList.add('chosen-wrong');
+  });
+  if(i === item.correct) score++;
+  document.getElementById('explainBox').classList.add('show');
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function nextQuestion(){
+  qIndex++;
+  if(qIndex < quizQuestions.length){
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult(){
+  progressFill.style.width = '100%';
+  const total = quizQuestions.length;
+  let msg = 'ممتاز! أنت تتقن أوامر PictoBlox 🚀';
+  if(score < total*0.5) msg = 'راجع البطاقات مرة أخرى وحاول من جديد 💪';
+  else if(score < total*0.8) msg = 'جيد جدًا! بقيت خطوة بسيطة للإتقان 👌';
+
+  quizBody.innerHTML = `
+    <div class="result">
+      <div class="score">${score}<small>/${total}</small></div>
+      <p>${msg}</p>
+      <div class="quiz-nav" style="justify-content:center; margin-top:24px;">
+        <button class="btn secondary" id="retryBtn">إعادة المحاولة</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    qIndex = 0; score = 0;
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>

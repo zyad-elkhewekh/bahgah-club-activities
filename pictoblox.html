@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PictoBlox وبايثون — أنشطة وتحديات | مركز ألغاز البرمجة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-navy:#161B33;
+    --paper:#FBF3E3;
+    --charcoal:#2A2A3C;
+    --magenta:#FF3E7F;
+    --cyan:#3EE6D6;
+    --gold:#FFC93E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, #1c3d3a 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #241a3d 0%, transparent 45%),
+      var(--ink-navy);
+    color:var(--paper);
+    font-family:'Cairo',system-ui,sans-serif;
+    min-height:100vh;
+    padding:48px 20px 60px;
+  }
+
+  header{ max-width:1000px; margin:0 auto 40px; text-align:center; }
+  .backlink{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'Cairo',sans-serif; font-weight:700; font-size:13.5px;
+    color:#CFD3EE; text-decoration:none; margin-bottom:22px;
+    padding:6px 14px; border-radius:999px; background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12); transition:background .15s ease;
+  }
+  .backlink:hover{ background:rgba(255,255,255,.12); }
+  .eyebrow{
+    font-family:'Cairo',sans-serif; letter-spacing:.08em; font-size:13px;
+    color:var(--cyan); font-weight:700; margin-bottom:10px; text-transform:uppercase;
+  }
+  h1{
+    font-family:'Baloo 2','Cairo',sans-serif; font-weight:800;
+    font-size:clamp(28px,5vw,48px); margin:0 0 12px;
+    text-shadow:0 0 18px rgba(62,230,214,.45), 0 0 40px rgba(255,62,127,.15);
+  }
+  h1 span{color:var(--cyan);}
+  .sub{ max-width:640px; margin:0 auto; font-size:16px; line-height:1.8; color:#CFD3EE; }
+
+  .grid{
+    max-width:760px; margin:0 auto; display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
+    gap:22px;
+  }
+
+  .card{
+    background:var(--paper); border-radius:18px; padding:24px 22px 22px;
+    box-shadow:0 18px 40px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.05);
+    color:var(--charcoal); text-decoration:none; display:flex; flex-direction:column;
+    gap:10px; transition:transform .15s ease, box-shadow .15s ease;
+    position:relative; overflow:hidden;
+  }
+  .card:hover{ transform:translateY(-5px); box-shadow:0 24px 46px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.05); }
+  .card .tag{
+    align-self:flex-start; font-family:'Baloo 2','Cairo',sans-serif; font-weight:700; font-size:11px;
+    letter-spacing:.04em; text-transform:uppercase; padding:4px 10px; border-radius:7px; color:#fff;
+  }
+  .card .icon{ font-size:38px; line-height:1; margin-top:2px; }
+  .card h2{
+    font-family:'Baloo 2','Cairo',sans-serif; font-weight:800; font-size:20px; margin:2px 0 0;
+  }
+  .card p{ font-size:13.5px; line-height:1.7; color:#5a5a6a; margin:0; flex:1; }
+  .card .open{
+    margin-top:6px; font-family:'Baloo 2','Cairo',sans-serif; font-weight:700; font-size:14px;
+    color:var(--charcoal); display:flex; align-items:center; gap:6px;
+  }
+  .card .open .arrow{ transition:transform .15s ease; }
+  .card:hover .open .arrow{ transform:translateX(-4px); }
+
+  .tag.practice{ background:#17A398; }
+  .tag.quiz{ background:#8E5CFF; }
+
+  footer{ max-width:1000px; margin:44px auto 0; text-align:center; font-size:12.5px; color:#7c82ad; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="backlink" href="index.html">→ العودة للصفحة الرئيسية</a>
+  <div class="eyebrow">PictoBlox &amp; Python</div>
+  <h1>مسار <span>PictoBlox وبايثون</span> 🐍</h1>
+  <p class="sub">نشاطان تفاعليان للانتقال من البرمجة الكتلية إلى بايثون في PictoBlox — اختر نشاطًا للبدء.</p>
+</header>
+
+<div class="grid">
+
+  <a class="card" href="pictoblox-code-practice.html">
+    <span class="tag practice">تمارين برمجة</span>
+    <div class="icon">💻</div>
+    <h2>تمارين برمجة PictoBlox وبايثون</h2>
+    <p>تمارين عملية لكتابة وإكمال أوامر بايثون داخل بيئة PictoBlox، للانتقال التدريجي من الكتل إلى الكود.</p>
+    <span class="open">افتح النشاط <span class="arrow">←</span></span>
+  </a>
+
+  <a class="card" href="pictoblox-quiz.html">
+    <span class="tag quiz">اختبار</span>
+    <div class="icon">🧠</div>
+    <h2>تحدي أوامر PictoBlox بايثون</h2>
+    <p>اختبار لمراجعة أوامر وبنية بايثون المستخدمة في PictoBlox، مع تفسير لكل إجابة.</p>
+    <span class="open">افتح النشاط <span class="arrow">←</span></span>
+  </a>
+
+</div>
+
+<footer>مسار PictoBlox وبايثون — جزء من مركز ألغاز البرمجة.</footer>
+
+</body>
+</html>

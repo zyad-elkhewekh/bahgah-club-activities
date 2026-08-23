@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تمارين برمجة PictoBlox وبايثون</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&family=Tajawal:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0c1f1b;
+    --bg-2: #10281f;
+    --panel: #143329;
+    --panel-2: #17392d;
+    --line: #235240;
+    --lime: #c6ff3d;
+    --amber: #ffb84d;
+    --red: #ff6b6b;
+    --text: #eaf5ef;
+    --text-dim: #9fc4b3;
+    --mono: 'JetBrains Mono', monospace;
+    --disp: 'Cairo', sans-serif;
+    --body: 'Tajawal', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(198,255,61,0.07), transparent 40%),
+      radial-gradient(circle at 85% 10%, rgba(255,184,77,0.06), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.7;
+  }
+  ::selection{ background:var(--lime); color:#0c1f1b; }
+
+  .wrap{ max-width:980px; margin:0 auto; padding:0 20px 100px; }
+
+  header.hero{ padding:60px 20px 34px; text-align:center; }
+  .chip-row{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+  .chip{
+    font-family:var(--mono); font-size:12.5px; color:var(--lime);
+    border:1px solid var(--line); background:rgba(198,255,61,0.06);
+    padding:5px 12px; border-radius:20px; letter-spacing:.3px;
+  }
+  h1.title{
+    font-family:var(--disp); font-weight:900; font-size:clamp(30px,5.6vw,50px);
+    margin:0 0 12px; letter-spacing:-0.5px;
+  }
+  h1.title span{ color:var(--lime); }
+  .subtitle{ color:var(--text-dim); font-size:16.5px; max-width:600px; margin:0 auto; }
+
+  .tracker{
+    margin:30px auto 0; max-width:340px; font-family:var(--mono); font-size:13px;
+    color:var(--text-dim); text-align:center; border:1px solid var(--line);
+    border-radius:30px; padding:8px 18px; background:var(--panel);
+  }
+  .tracker b{ color:var(--lime); }
+
+  section{ margin-top:74px; }
+  .eyebrow{
+    font-family:var(--mono); color:var(--amber); font-size:12.5px;
+    letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;
+  }
+  h2.sec-title{ font-family:var(--disp); font-weight:800; font-size:clamp(22px,4vw,30px); margin:0 0 8px; }
+  .sec-desc{ color:var(--text-dim); margin-bottom:30px; max-width:640px; }
+
+  /* ---------- challenge card shell ---------- */
+  .challenge{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:26px 26px 24px; margin-bottom:22px;
+  }
+  .challenge-head{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;
+  }
+  .challenge-num{ font-family:var(--mono); font-size:12px; color:var(--text-dim); }
+  .status-badge{
+    font-family:var(--mono); font-size:11.5px; padding:3px 10px; border-radius:20px;
+    border:1px solid var(--line); color:var(--text-dim);
+  }
+  .status-badge.solved{ color:var(--lime); border-color:var(--lime); background:rgba(198,255,61,0.08); }
+
+  .code-block{
+    direction:ltr; text-align:left; font-family:var(--mono); font-size:14.5px;
+    background:var(--bg-2); border:1px solid var(--line); border-radius:10px;
+    padding:16px 18px; white-space:pre; overflow-x:auto; margin-bottom:16px;
+    color:#dfeee6;
+  }
+  .code-block .kw{ color:#7fe0ff; }
+  .code-block .str{ color:var(--amber); }
+  .code-block .blank-input{
+    font-family:var(--mono); font-size:14.5px; background:var(--bg);
+    border:1.5px dashed var(--lime); color:var(--lime); border-radius:6px;
+    padding:2px 8px; width:90px; text-align:center;
+  }
+  .code-block .blank-input:focus{ outline:none; border-style:solid; }
+  .code-block .blank-input.wrong{ border-color:var(--red); color:var(--red); }
+  .code-block .blank-input.correct{ border-color:var(--lime); background:rgba(198,255,61,0.1); }
+
+  .challenge-desc{ font-size:14.5px; color:var(--text-dim); margin-bottom:16px; }
+
+  .challenge-actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn{
+    font-family:var(--disp); font-weight:700; font-size:13.5px; padding:9px 20px;
+    background:var(--lime); color:#0c1f1b; border:none; border-radius:30px; cursor:pointer;
+    transition:.15s;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(198,255,61,0.25); }
+  .btn.secondary{ background:transparent; border:1.5px solid var(--line); color:var(--text); }
+  .btn.secondary:hover{ box-shadow:none; border-color:var(--lime); }
+  .feedback{ font-family:var(--mono); font-size:12.5px; margin-top:4px; min-height:18px; }
+  .feedback.ok{ color:var(--lime); }
+  .feedback.bad{ color:var(--red); }
+  .hint-box{
+    display:none; margin-top:12px; font-size:13px; color:var(--text-dim);
+    background:var(--bg-2); border-radius:8px; padding:10px 14px;
+  }
+  .hint-box.show{ display:block; }
+
+  /* ---------- arrange puzzle ---------- */
+  .token-pool{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .token{
+    font-family:var(--mono); font-size:13.5px; direction:ltr; padding:8px 14px;
+    background:var(--bg-2); border:1.5px solid var(--line); border-radius:8px;
+    cursor:pointer; color:var(--text); transition:.12s; user-select:none;
+  }
+  .token:hover{ border-color:var(--lime); }
+  .token.used{ opacity:.25; cursor:default; }
+  .answer-line{
+    direction:ltr; text-align:left; min-height:64px; background:var(--bg);
+    border:1.5px dashed var(--line); border-radius:10px; padding:12px 14px;
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:14px;
+  }
+  .answer-line .placeholder{ color:var(--text-dim); font-family:var(--mono); font-size:13px; }
+  .answer-line .token.placed{ background:var(--panel-2); border-color:var(--amber); cursor:pointer; opacity:1; }
+  .answer-line .nl{ flex-basis:100%; height:0; }
+
+  footer{
+    text-align:center; padding:40px 20px; color:var(--text-dim); font-size:13px;
+    font-family:var(--mono); border-top:1px solid var(--line); margin-top:80px;
+  }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <a href="pictoblox.html" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13.5px;text-decoration:none;color:inherit;opacity:.75;margin-bottom:14px;">→ العودة إلى مسار PictoBlox وبايثون</a>
+  <div class="chip-row">
+    <span class="chip">PictoBlox</span>
+    <span class="chip">Python</span>
+    <span class="chip">Loops · Conditions</span>
+  </div>
+  <h1 class="title">تمارين <span>كتابة الكود</span></h1>
+  <p class="subtitle">مش بس تعرف الأمر — جرّب تكتبه. أكمل الأجزاء الناقصة أو رتّب الكلمات لتبني السطر الصحيح.</p>
+  <div class="tracker" id="tracker">تم حل <b id="solvedCount">0</b> من <b id="totalCount">0</b></div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ FILL IN THE BLANK ============ -->
+  <section id="fill-section">
+    <div class="eyebrow">01 — أكمل الكود</div>
+    <h2 class="sec-title">اكتب الجزء الناقص</h2>
+    <p class="sec-desc">اقرأ الكود، افهم الهدف منه، واكتب القيمة أو الكلمة الناقصة في المكان الفارغ.</p>
+    <div id="fillContainer"></div>
+  </section>
+
+  <!-- ============ ARRANGE THE CODE ============ -->
+  <section id="arrange-section">
+    <div class="eyebrow">02 — رتّب الكود</div>
+    <h2 class="sec-title">ركّب السطر الصحيح</h2>
+    <p class="sec-desc">اضغط على الكلمات بالترتيب الصحيح لبناء الكود المطلوب. اضغط على كلمة في المكان المخصص للتراجع عنها.</p>
+    <div id="arrangeContainer"></div>
+  </section>
+
+</div>
+
+<footer>print("keep practicing")</footer>
+
+<script>
+/* ======================================================
+   FILL-IN-THE-BLANK CHALLENGES
+   ====================================================== */
+const fillChallenges = [
+  {
+    title: "اطبع الأرقام من 0 إلى 4",
+    desc: "استخدم range() بعدد واحد فقط ليكرر الحلقة 5 مرات.",
+    before: 'for i in range(', after: '):\n    print(i)',
+    hint: "range(رقم) وحده يبدأ تلقائيًا من 0 ويكرر بعدد الرقم المُعطى.",
+    check: v => v.trim() === "5",
+    answer: "5"
+  },
+  {
+    title: "هرم النجوم ⭐",
+    desc: "كل سطر يجب أن يحتوي على عدد نجوم يساوي رقم السطر نفسه — استخدم متغير الحلقة.",
+    before: 'for i in range(1, 6):\n    print("*" * ', after: ')',
+    hint: "متغير الحلقة i يزيد مع كل تكرار (1, 2, 3...) — استخدمه مباشرة كمضاعف للنجوم.",
+    check: v => v.trim() === "i",
+    answer: "i"
+  },
+  {
+    title: "تقييم الدرجات (elif)",
+    desc: "هناك أكثر من شرطين قبل else، فماذا نستخدم بينهما؟",
+    before: 'if score >= 90:\n    grade = "A"\n', after: ' score >= 80:\n    grade = "B"\nelse:\n    grade = "C"',
+    hint: "الكلمة المفتاحية التي تجمع بين if وelse عند وجود أكثر من شرط.",
+    check: v => v.trim() === "elif",
+    answer: "elif"
+  },
+  {
+    title: "لعبة تخمين الرقم",
+    desc: "إذا لم يتحقق الشرط الأول، ماذا نستخدم لتنفيذ كود بديل؟",
+    before: 'if guess == number:\n    print("صحيح!")\n', after: ':\n    print("حاول مرة أخرى")',
+    hint: "كلمة مفتاحية واحدة، بدون شرط، تُنفَّذ عندما يفشل شرط if.",
+    check: v => v.trim() === "else",
+    answer: "else"
+  },
+  {
+    title: "تحريك الشخصية بالسهم الأيمن",
+    desc: "اكتب رقمًا موجبًا لتحريك الشخصية يمينًا عند ضغط السهم الأيمن.",
+    before: 'if sprite.iskeypressed("right arrow"):\n    sprite.changex(', after: ')',
+    hint: "أي رقم موجب سيعمل (مثلاً بين 1 و20) — الرقم السالب سيحرّكها يسارًا بالخطأ.",
+    check: v => { const n = parseFloat(v.trim()); return !isNaN(n) && n > 0; },
+    answer: "أي رقم موجب، مثل 10"
+  },
+  {
+    title: "زيادة النقاط عند لمس التفاحة",
+    desc: "عندما تلمس الشخصية التفاحة، أضف نقطة واحدة إلى score.",
+    before: 'if sprite.istouching("Apple"):\n    score = score + ', after: '',
+    hint: "زيادة بسيطة بمقدار نقطة واحدة في كل مرة.",
+    check: v => v.trim() === "1",
+    answer: "1"
+  }
+];
+
+/* ======================================================
+   WORD-ARRANGEMENT CHALLENGES
+   ====================================================== */
+const arrangeChallenges = [
+  {
+    title: "اطبع كلمة 'Hello' ثلاث مرات",
+    tokens: ["for", "i", "in", "range(3):", "↵", 'print("Hello")']
+  },
+  {
+    title: "هرم النجوم في سطر واحد",
+    tokens: ["for", "i", "in", "range(1, 6):", "↵", 'print("*" * i)']
+  },
+  {
+    title: "تحقق من السن للتصويت",
+    tokens: ["if", "age", ">=", "18:", "↵", 'print("You can vote")']
+  },
+  {
+    title: "تحريك الشخصية بضغطة السهم الأيمن",
+    tokens: ["if", 'sprite.iskeypressed("right arrow"):', "↵", "sprite.changex(10)"]
+  },
+  {
+    title: "إعادة التفاحة لموقع عشوائي عند لمسها",
+    tokens: ["if", 'sprite.istouching("Apple"):', "↵", "apple.gotoxy(random.randint(-200, 200), 150)"]
+  }
+];
+
+/* ======================================================
+   SHARED PROGRESS TRACKER
+   ====================================================== */
+const totalChallenges = fillChallenges.length + arrangeChallenges.length;
+let solvedSet = new Set();
+document.getElementById('totalCount').textContent = totalChallenges;
+
+function markSolved(id){
+  solvedSet.add(id);
+  document.getElementById('solvedCount').textContent = solvedSet.size;
+}
+
+/* ======================================================
+   RENDER: FILL IN THE BLANK
+   ====================================================== */
+const fillContainer = document.getElementById('fillContainer');
+
+fillChallenges.forEach((ch, idx) => {
+  const id = 'fill-' + idx;
+  const card = document.createElement('div');
+  card.className = 'challenge';
+  card.innerHTML = `
+    <div class="challenge-head">
+      <div class="challenge-num">تمرين ${idx + 1} / ${fillChallenges.length} — ${ch.title}</div>
+      <div class="status-badge" id="${id}-badge">لم يُحل بعد</div>
+    </div>
+    <div class="challenge-desc">${ch.desc}</div>
+    <div class="code-block">${escapeHtml(ch.before)}<input type="text" class="blank-input" id="${id}-input" autocomplete="off" spellcheck="false">${escapeHtml(ch.after)}</div>
+    <div class="challenge-actions">
+      <button class="btn" id="${id}-check">تحقّق</button>
+      <button class="btn secondary" id="${id}-hint">تلميح</button>
+      <button class="btn secondary" id="${id}-reveal">أظهر الحل</button>
+    </div>
+    <div class="feedback" id="${id}-feedback"></div>
+    <div class="hint-box" id="${id}-hintbox">${escapeHtml(ch.hint)}</div>
+  `;
+  fillContainer.appendChild(card);
+
+  const input = document.getElementById(id + '-input');
+  const feedback = document.getElementById(id + '-feedback');
+  const badge = document.getElementById(id + '-badge');
+  let attempts = 0;
+
+  document.getElementById(id + '-check').addEventListener('click', () => {
+    const val = input.value;
+    if(val.trim() === ""){
+      feedback.textContent = "اكتب إجابة أولاً.";
+      feedback.className = 'feedback bad';
+      return;
+    }
+    if(ch.check(val)){
+      input.classList.remove('wrong');
+      input.classList.add('correct');
+      input.disabled = true;
+      feedback.textContent = "✅ صحيح!";
+      feedback.className = 'feedback ok';
+      badge.textContent = "تم الحل";
+      badge.classList.add('solved');
+      markSolved(id);
+    } else {
+      attempts++;
+      input.classList.add('wrong');
+      feedback.textContent = attempts >= 2 ? "❌ ما زالت غير صحيحة — جرّب زر (تلميح) أو (أظهر الحل)." : "❌ غير صحيحة، حاول مرة أخرى.";
+      feedback.className = 'feedback bad';
+    }
+  });
+
+  document.getElementById(id + '-hint').addEventListener('click', () => {
+    document.getElementById(id + '-hintbox').classList.toggle('show');
+  });
+
+  document.getElementById(id + '-reveal').addEventListener('click', () => {
+    input.value = ch.answer;
+    input.classList.remove('wrong');
+    if(ch.check(ch.answer)){
+      input.classList.add('correct');
+      input.disabled = true;
+      badge.textContent = "تم الحل";
+      badge.classList.add('solved');
+      markSolved(id);
+      feedback.textContent = "✅ تم عرض الحل.";
+      feedback.className = 'feedback ok';
+    }
+  });
+});
+
+/* ======================================================
+   RENDER: WORD ARRANGEMENT
+   ====================================================== */
+const arrangeContainer = document.getElementById('arrangeContainer');
+
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+arrangeChallenges.forEach((ch, idx) => {
+  const id = 'arr-' + idx;
+  const shuffled = shuffle(ch.tokens);
+
+  const card = document.createElement('div');
+  card.className = 'challenge';
+  card.innerHTML = `
+    <div class="challenge-head">
+      <div class="challenge-num">تمرين ${idx + 1} / ${arrangeChallenges.length} — ${ch.title}</div>
+      <div class="status-badge" id="${id}-badge">لم يُحل بعد</div>
+    </div>
+    <div class="answer-line" id="${id}-answer"><span class="placeholder">اضغط على الكلمات بالأسفل لبناء الكود هنا...</span></div>
+    <div class="token-pool" id="${id}-pool"></div>
+    <div class="challenge-actions">
+      <button class="btn" id="${id}-check">تحقّق</button>
+      <button class="btn secondary" id="${id}-reset">إعادة التعيين</button>
+    </div>
+    <div class="feedback" id="${id}-feedback"></div>
+  `;
+  arrangeContainer.appendChild(card);
+
+  const pool = document.getElementById(id + '-pool');
+  const answerLine = document.getElementById(id + '-answer');
+  const feedback = document.getElementById(id + '-feedback');
+  const badge = document.getElementById(id + '-badge');
+
+  let placed = []; // array of {text, poolIndex}
+  let solved = false;
+
+  function renderPool(){
+    pool.innerHTML = '';
+    shuffled.forEach((tok, i) => {
+      const isUsed = placed.some(p => p.poolIndex === i);
+      const t = document.createElement('div');
+      t.className = 'token' + (isUsed ? ' used' : '');
+      t.textContent = tok === '↵' ? '↵ سطر جديد' : tok;
+      if(!isUsed && !solved){
+        t.addEventListener('click', () => {
+          placed.push({ text: tok, poolIndex: i });
+          renderPool();
+          renderAnswer();
+        });
+      }
+      pool.appendChild(t);
+    });
+  }
+
+  function renderAnswer(){
+    if(placed.length === 0){
+      answerLine.innerHTML = '<span class="placeholder">اضغط على الكلمات بالأسفل لبناء الكود هنا...</span>';
+      return;
+    }
+    answerLine.innerHTML = '';
+    placed.forEach((p, i) => {
+      if(p.text === '↵'){
+        const nl = document.createElement('div');
+        nl.className = 'nl';
+        answerLine.appendChild(nl);
+        return;
+      }
+      const t = document.createElement('div');
+      t.className = 'token placed';
+      t.textContent = p.text;
+      if(!solved){
+        t.addEventListener('click', () => {
+          placed.splice(i, 1);
+          renderPool();
+          renderAnswer();
+        });
+      }
+      answerLine.appendChild(t);
+    });
+  }
+
+  document.getElementById(id + '-check').addEventListener('click', () => {
+    const built = placed.map(p => p.text);
+    const correct = built.length === ch.tokens.length && built.every((t, i) => t === ch.tokens[i]);
+    if(correct){
+      solved = true;
+      feedback.textContent = "✅ ترتيب صحيح!";
+      feedback.className = 'feedback ok';
+      badge.textContent = "تم الحل";
+      badge.classList.add('solved');
+      markSolved(id);
+      renderPool();
+      renderAnswer();
+    } else {
+      feedback.textContent = "❌ الترتيب غير صحيح، حاول مرة أخرى.";
+      feedback.className = 'feedback bad';
+    }
+  });
+
+  document.getElementById(id + '-reset').addEventListener('click', () => {
+    if(solved) return;
+    placed = [];
+    feedback.textContent = '';
+    renderPool();
+    renderAnswer();
+  });
+
+  renderPool();
+  renderAnswer();
+});
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

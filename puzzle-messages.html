@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جمّع اللعبة — الرسائل والمتغيرات والقوائم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Cairo:wght@400;500;600;700;800&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-navy:#161B33;
+    --paper:#FBF3E3;
+    --paper-line:#E6D8B8;
+    --charcoal:#2A2A3C;
+    --magenta:#FF3E7F;
+    --cyan:#3EE6D6;
+    --gold:#FFC93E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, #262c55 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #241a3d 0%, transparent 45%),
+      var(--ink-navy);
+    color:var(--paper);
+    font-family:'Cairo','Inter',system-ui,sans-serif;
+    min-height:100vh;
+    padding:28px 20px 60px;
+  }
+
+  header{ max-width:1280px; margin:0 auto 22px; text-align:center; }
+  .eyebrow{
+    font-family:'Cairo',sans-serif; letter-spacing:.05em; font-size:13px;
+    color:var(--cyan); font-weight:700; margin-bottom:6px; text-transform:uppercase;
+  }
+  h1{
+    font-family:'Baloo 2','Cairo',sans-serif; font-weight:800;
+    font-size:clamp(26px,4.5vw,42px); margin:0 0 8px;
+    text-shadow:0 0 18px rgba(255,62,127,.45), 0 0 40px rgba(62,230,214,.15);
+  }
+  h1 span{color:var(--magenta);}
+  .sub{ max-width:720px; margin:0 auto; font-size:15px; line-height:1.8; color:#CFD3EE; }
+  .sub b{color:var(--cyan);}
+
+  .goal-box{
+    max-width:760px; margin:18px auto 0; background:rgba(62,230,214,.08);
+    border:1.5px solid rgba(62,230,214,.35); border-radius:12px;
+    padding:12px 18px; display:flex; gap:12px; align-items:flex-start; text-align:right;
+  }
+  .goal-box .trophy{ font-size:22px; line-height:1; flex-shrink:0; }
+  .goal-box p{ margin:0; font-size:13.5px; line-height:1.8; color:#CFD3EE; }
+  .goal-box b{ color:var(--gold); }
+
+  .toolbar{ max-width:1280px; margin:20px auto 26px; display:flex; justify-content:center; gap:14px; flex-wrap:wrap; }
+  button.arcade-btn{
+    font-family:'Baloo 2','Cairo',sans-serif; font-weight:700; font-size:16px;
+    border:none; border-radius:12px; padding:13px 26px; cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  #runBtn{
+    background:linear-gradient(180deg,#4CF3E1,var(--cyan) 60%,#1FADA0); color:#0B2320;
+    box-shadow:0 0 0 3px rgba(62,230,214,.18), 0 6px 0 #1c8f83, 0 10px 22px rgba(62,230,214,.35);
+  }
+  #runBtn:disabled{ background:#3a4066; color:#7d84ab; box-shadow:0 6px 0 #262b48; cursor:not-allowed; }
+  #runBtn:not(:disabled):hover{transform:translateY(-2px);}
+  #runBtn:not(:disabled):active{transform:translateY(2px); box-shadow:0 0 0 3px rgba(62,230,214,.18), 0 2px 0 #1c8f83;}
+  #shuffleBtn{
+    background:linear-gradient(180deg,#FF6FA0,var(--magenta) 60%,#C41A57); color:#2E0714;
+    box-shadow:0 6px 0 #971040, 0 10px 20px rgba(255,62,127,.3);
+  }
+  #shuffleBtn:hover{transform:translateY(-2px);}
+  #shuffleBtn:active{transform:translateY(2px); box-shadow:0 2px 0 #971040;}
+
+  .code-panel{
+    max-width:1280px; margin:0 auto 26px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 27px, var(--paper-line) 27px 28px),
+      repeating-linear-gradient(90deg, transparent 0 27px, var(--paper-line) 27px 28px),
+      var(--paper);
+    border-radius:16px; padding:16px 16px 20px; position:relative;
+    box-shadow:0 18px 40px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.05);
+  }
+  .panel-label{
+    font-family:'Baloo 2','Cairo',sans-serif; font-weight:700; font-size:13px;
+    color:var(--charcoal); background:#fff; display:inline-block; padding:5px 12px;
+    border-radius:8px; border:2px solid var(--charcoal); margin-bottom:10px;
+  }
+  .workspace{
+    position:relative; width:100%; height:560px; overflow:auto; border-radius:10px;
+    direction:ltr;
+  }
+
+  .anchor{
+    position:absolute; width:230px; height:44px;
+    border:2.5px dashed #B9A97A; border-radius:10px; display:flex; align-items:center;
+    justify-content:center; color:#B29B5E; font-size:11px; font-weight:700;
+    text-align:center; pointer-events:none; transition:opacity .2s ease; direction:rtl;
+    font-family:'Cairo',sans-serif; padding:4px;
+  }
+  .anchor.hidden{opacity:0;}
+  .lane-label{
+    position:absolute; font-family:'Cairo',sans-serif; font-weight:800; font-size:12px;
+    color:#8a7a4a; letter-spacing:.03em; direction:rtl; text-align:right; width:230px;
+  }
+
+  /* ---------- BLOCKS ---------- */
+  .block{
+    position:absolute; width:230px; min-height:42px; border-radius:9px;
+    padding:9px 12px 9px 18px; font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px;
+    color:#fff; cursor:grab; user-select:none; touch-action:none;
+    box-shadow:0 4px 0 rgba(0,0,0,.22), 0 6px 14px rgba(0,0,0,.25);
+    display:flex; align-items:center; gap:6px; z-index:5; direction:ltr; text-align:left;
+  }
+  .block .stud{ position:absolute; top:-7px; left:16px; width:24px; height:9px; border-radius:5px 5px 0 0; background:inherit; filter:brightness(1.08); }
+  .block.hat .stud{display:none;}
+  .block.hat{border-radius:16px 16px 9px 9px;}
+  .block.dragging{cursor:grabbing; z-index:80; box-shadow:0 14px 26px rgba(0,0,0,.45); transform:scale(1.03);}
+  .block .icon{font-size:14px;flex-shrink:0;}
+
+  .remove-x{
+    margin-left:auto; width:18px;height:18px; border-radius:50%; background:rgba(0,0,0,.22);
+    display:flex;align-items:center;justify-content:center; font-size:10px; cursor:pointer; flex-shrink:0;
+  }
+  .remove-x:hover{background:rgba(0,0,0,.4);}
+
+  @keyframes pop{0%{transform:scale(1);}40%{transform:scale(1.08);}100%{transform:scale(1);}}
+  .block.snap-pop{animation:pop .22s ease;}
+
+  .cat-events{background:linear-gradient(180deg,#FFC93E,#C9930B);}
+  .cat-motion{background:linear-gradient(180deg,#4C8DFF,#2C63D6);}
+  .cat-looks{background:linear-gradient(180deg,#B968F0,#8A3FC4);}
+  .cat-variables{background:linear-gradient(180deg,#FF8A3E,#D9631A);}
+  .cat-lists{background:linear-gradient(180deg,#17A398,#0F7A70);}
+
+  /* ---------- ARCADE / STAGE ---------- */
+  .stage-wrap{ max-width:640px; margin:0 auto; }
+  .cabinet{
+    background:linear-gradient(180deg,#2b2f57,#161a33); border-radius:20px; padding:16px;
+    box-shadow:0 22px 45px rgba(0,0,0,.5), inset 0 0 0 2px #3a4176; position:relative;
+  }
+  .marquee{
+    text-align:center; font-family:'Baloo 2','Cairo',sans-serif; font-weight:700; font-size:13px;
+    color:var(--gold); text-shadow:0 0 10px rgba(255,201,62,.6); padding-bottom:10px;
+  }
+  #stage{
+    position:relative; width:100%; height:280px; direction:ltr;
+    background:linear-gradient(180deg, #2e6b56 0%, #1f4f3d 60%, #17402f 100%);
+    border-radius:10px; overflow:hidden;
+    box-shadow:inset 0 0 0 3px #0c1a14, inset 0 0 40px rgba(0,0,0,.5);
+  }
+  #stage::after{
+    content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px);
+    pointer-events:none;
+  }
+  #scoreDisplay{
+    position:absolute; top:8px; right:10px; background:rgba(0,0,0,.35); color:var(--gold);
+    font-family:'Baloo 2','Cairo',sans-serif; font-weight:700; font-size:12px;
+    padding:4px 10px; border-radius:8px;
+  }
+  #basketDisplay{
+    position:absolute; top:8px; left:10px; background:rgba(0,0,0,.35); color:#9EF5E6;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
+    padding:4px 10px; border-radius:8px; direction:rtl; max-width:60%;
+  }
+  #broadcastPill{
+    position:absolute; top:44px; left:50%; transform:translate(-50%,0);
+    background:rgba(255,201,62,.95); color:#3a2c00; font-family:'Baloo 2','Cairo',sans-serif;
+    font-weight:700; font-size:12px; padding:5px 14px; border-radius:20px; opacity:0;
+    transition:opacity .2s ease, top .2s ease; direction:rtl;
+  }
+  #broadcastPill.show{opacity:1; top:52px;}
+  #sprite{ position:absolute; font-size:38px; top:60%; left:50%; transform:translate(-50%,-50%); visibility:hidden; transition:left .3s ease; }
+  #bubble{
+    position:absolute; top:28%; left:50%; transform:translate(-50%,0); background:#fff; color:#1a1a1a;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; padding:6px 12px; border-radius:14px;
+    white-space:nowrap; opacity:0; transition:opacity .15s ease; box-shadow:0 4px 10px rgba(0,0,0,.3);
+  }
+  #bubble.show{opacity:1;}
+
+  .feedback{
+    margin-top:12px; text-align:center; font-family:'Baloo 2','Cairo',sans-serif; font-weight:700;
+    font-size:14px; min-height:20px; color:#CFD3EE; transition:color .2s ease;
+  }
+  .feedback.win{color:var(--cyan); text-shadow:0 0 10px rgba(62,230,214,.5);}
+  .feedback.fail{color:var(--magenta);}
+
+  .legend{ max-width:1280px; margin:20px auto 0; display:flex; justify-content:center; gap:14px; flex-wrap:wrap; font-size:12.5px; color:#AEB4DE; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:12px; height:12px; border-radius:3px; display:inline-block; }
+
+  footer{ max-width:1280px; margin:34px auto 0; text-align:center; font-size:12.5px; color:#7c82ad; }
+
+  @media (max-width:900px){
+    .workspace{height:1500px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="scratch.html" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13.5px;text-decoration:none;color:inherit;opacity:.75;margin-bottom:14px;">→ العودة إلى مسار سكراتش</a>
+  <div class="eyebrow">لغز برمجي — الرسائل والمتغيرات والقوائم</div>
+  <h1>جمّع <span>اللعبة</span> 📣</h1>
+  <p class="sub">هذه اللعبة مكوّنة من <b>ثلاثة سكربتات مستقلة</b> تتواصل عبر الرسائل (broadcast).
+  رتّب قطع كل سكربت في مساره الخاص، فحين يعمل أحد السكربتات ويرسل رسالة، سيبدأ السكربت الآخر تلقائيًا بالعمل.
+  رتّب كل القطع الـ12 ثم اضغط <b>تشغيل</b>.</p>
+  <div class="goal-box">
+    <span class="trophy">🏆</span>
+    <p><b>الهدف:</b> رتّب القطع الـ12 كلها بالترتيب الصحيح في سكربتاتها الثلاثة. عند الضغط على تشغيل يبدأ السكربت الأول (🏁)، وإن كان صحيحًا سيرسل رسالة <b>Collect</b> تُشغّل السكربت الثاني تلقائيًا (إضافة 🍎 إلى السلة وزيادة النقاط)، الذي بدوره يرسل رسالة <b>Done</b> تُشغّل السكربت الثالث (رسالة "Game Over"). إن كانت السكربتات الثلاثة كلها صحيحة بالكامل، ستظهر عبارة <b>"🏆 لقد فزت!"</b> مع احتفال بالكونفيتي. إن كان أحدها خاطئًا، لن تظهر رسالة الفوز حتى لو عمل جزء من السلسلة — راجع كل مسار وحاول من جديد.</p>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button id="runBtn" class="arcade-btn" disabled>▶ تشغيل</button>
+  <button id="shuffleBtn" class="arcade-btn">🔀 خلط / إعادة</button>
+</div>
+
+<section class="code-panel">
+  <div class="panel-label">🧩 منطقة الأكواد</div>
+  <div class="workspace" id="workspace"></div>
+</section>
+
+<div class="stage-wrap">
+  <div class="cabinet">
+    <div class="marquee" id="marquee">ركّب القطع لتبدأ اللعب</div>
+    <div id="stage">
+      <div id="scoreDisplay">النقاط: 0</div>
+      <div id="basketDisplay">🧺:</div>
+      <div id="broadcastPill">📣</div>
+      <div id="sprite">🦊</div>
+      <div id="bubble"></div>
+    </div>
+    <div class="feedback" id="feedback">لا توجد قطع مرتبطة بعد.</div>
+  </div>
+</div>
+
+<div class="legend">
+  <span><i style="background:#FFC93E"></i>أحداث Events</span>
+  <span><i style="background:#4C8DFF"></i>حركة Motion</span>
+  <span><i style="background:#B968F0"></i>مظهر Looks</span>
+  <span><i style="background:#FF8A3E"></i>متغيرات Variables</span>
+  <span><i style="background:#17A398"></i>قوائم Lists</span>
+</div>
+
+<footer>كل سكربت يبدأ بقطعة "قبعة" (مثل 🏁 أو 📩) — لا يمكن وضعها إلا في بداية مسار. اضغط ✕ لإزالة أي قطعة.</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var SCRIPTS = [
+    {
+      id: 'A',
+      anchor: { x: 20, y: 30 },
+      laneLabel: 'السكربت 1 — الإعداد',
+      correct: ['hatA','setScore','clearList','broadcast1'],
+      defs: [
+        { id:'hatA',      type:'hat',   cat:'events',    icon:'🏁', label:'when green flag clicked' },
+        { id:'setScore',  type:'stack', cat:'variables', icon:'0️⃣', label:'set Score to 0',
+          action:{ type:'setvar', value:0 } },
+        { id:'clearList', type:'stack', cat:'lists',     icon:'🧹', label:'delete all of Basket',
+          action:{ type:'clearlist' } },
+        { id:'broadcast1',type:'stack', cat:'events',    icon:'📣', label:'broadcast Collect and wait',
+          action:{ type:'broadcast', target:'B' } }
+      ]
+    },
+    {
+      id: 'B',
+      anchor: { x: 20, y: 30 },
+      laneLabel: 'السكربت 2 — الجمع',
+      correct: ['hatB','show','addItem','changeScore','say1','broadcast2'],
+      defs: [
+        { id:'hatB',       type:'hat',   cat:'events',    icon:'📩', label:'when I receive Collect' },
+        { id:'show',       type:'stack', cat:'looks',     icon:'👁️', label:'show',
+          action:{ type:'show' } },
+        { id:'addItem',    type:'stack', cat:'lists',     icon:'➕', label:'add 🍎 to Basket',
+          action:{ type:'addlist', item:'🍎' } },
+        { id:'changeScore',type:'stack', cat:'variables', icon:'🔼', label:'change Score by 1',
+          action:{ type:'changevar', delta:1 } },
+        { id:'say1',       type:'stack', cat:'looks',     icon:'💬', label:'say "Yum!" for 1 secs',
+          action:{ type:'say', text:'Yum! 🍎', secs:1 } },
+        { id:'broadcast2', type:'stack', cat:'events',    icon:'📣', label:'broadcast Done and wait',
+          action:{ type:'broadcast', target:'C' } }
+      ]
+    },
+    {
+      id: 'C',
+      anchor: { x: 20, y: 30 },
+      laneLabel: 'السكربت 3 — الختام',
+      correct: ['hatC','say2'],
+      defs: [
+        { id:'hatC', type:'hat',   cat:'events', icon:'📩', label:'when I receive Done' },
+        { id:'say2', type:'stack', cat:'looks',  icon:'🏁', label:'say "Game Over!" for 2 secs',
+          action:{ type:'say', text:'Game Over! 🏁', secs:2 } }
+      ]
+    }
+  ];
+
+  var BLOCK_W = 230, BLOCK_H = 42, GAP = 4;
+  var LANE_GAP = 40;
+  var THRESHOLD = 56;
+
+  var workspace = document.getElementById('workspace');
+  var runBtn = document.getElementById('runBtn');
+  var shuffleBtn = document.getElementById('shuffleBtn');
+  var feedbackEl = document.getElementById('feedback');
+  var marquee = document.getElementById('marquee');
+  var sprite = document.getElementById('sprite');
+  var bubble = document.getElementById('bubble');
+  var scoreDisplay = document.getElementById('scoreDisplay');
+  var basketDisplay = document.getElementById('basketDisplay');
+  var broadcastPill = document.getElementById('broadcastPill');
+
+  var blocks = {};       // id -> {el, def, scriptId}
+  var chains = {};        // scriptId -> [ids]
+  var parentOf = {};      // id -> scriptId ('A'/'B'/'C') if attached, else null
+  var totalBlocks = 0;
+
+  function wsRect(){ return workspace.getBoundingClientRect(); }
+
+  function layoutLanes(){
+    // position anchors side by side across the workspace width
+    var wsWidth = workspace.clientWidth || 900;
+    var laneW = Math.max(BLOCK_W + 40, wsWidth / SCRIPTS.length);
+    SCRIPTS.forEach(function(s, i){
+      s.anchor.x = 20 + i * laneW;
+      s.anchor.y = 30;
+    });
+  }
+
+  function buildAnchorsAndLabels(){
+    workspace.querySelectorAll('.anchor, .lane-label').forEach(function(e){ e.remove(); });
+    SCRIPTS.forEach(function(s){
+      var lbl = document.createElement('div');
+      lbl.className = 'lane-label';
+      lbl.style.left = s.anchor.x + 'px';
+      lbl.style.top = (s.anchor.y - 24) + 'px';
+      lbl.textContent = s.laneLabel;
+      workspace.appendChild(lbl);
+
+      var a = document.createElement('div');
+      a.className = 'anchor';
+      a.id = 'anchor-' + s.id;
+      a.style.left = s.anchor.x + 'px';
+      a.style.top = s.anchor.y + 'px';
+      a.textContent = 'ابدأ هنا';
+      workspace.appendChild(a);
+    });
+  }
+
+  function setBg(el, cat){ el.classList.add('cat-' + cat); }
+
+  function buildBlocks(){
+    workspace.querySelectorAll('.block').forEach(function(b){ b.remove(); });
+    blocks = {}; chains = {}; parentOf = {}; totalBlocks = 0;
+
+    SCRIPTS.forEach(function(s){
+      chains[s.id] = [];
+      s.defs.forEach(function(def){
+        totalBlocks++;
+        var el = document.createElement('div');
+        el.className = 'block' + (def.type === 'hat' ? ' hat' : '');
+        setBg(el, def.cat);
+        el.dataset.id = def.id;
+
+        var stud = document.createElement('div'); stud.className='stud'; el.appendChild(stud);
+        var icon = document.createElement('span'); icon.className='icon'; icon.textContent = def.icon; el.appendChild(icon);
+        var lab = document.createElement('span'); lab.textContent = def.label; el.appendChild(lab);
+
+        if (def.type !== 'hat'){
+          var x = document.createElement('span'); x.className='remove-x'; x.textContent='✕';
+          x.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); });
+          x.addEventListener('click', function(ev){ ev.stopPropagation(); detachBlock(def.id, true); });
+          el.appendChild(x);
+        }
+        el.addEventListener('pointerdown', function(ev){ onPointerDown(ev, def.id, s.id); });
+
+        workspace.appendChild(el);
+        blocks[def.id] = { el: el, def: def, scriptId: s.id };
+        parentOf[def.id] = null;
+      });
+    });
+  }
+
+  function randomScatter(){
+    var rect = { width: workspace.clientWidth || 900, height: 500 };
+    var margin = 10;
+    var usedSpots = [];
+    Object.keys(blocks).forEach(function(id){
+      var b = blocks[id];
+      var x, y, tries = 0, ok;
+      do{
+        x = margin + Math.random() * Math.max(20, rect.width - BLOCK_W - margin*2);
+        y = 90 + Math.random() * (rect.height - 150);
+        ok = usedSpots.every(function(sp){ return Math.abs(sp.x-x) > 80 || Math.abs(sp.y-y) > 36; });
+        tries++;
+      } while(!ok && tries < 40);
+      usedSpots.push({x:x,y:y});
+      b.el.style.left = x + 'px';
+      b.el.style.top = y + 'px';
+      b.el.style.transform = 'rotate(' + (Math.random()*10-5).toFixed(1) + 'deg)';
+      b.el.classList.remove('attached');
+    });
+  }
+
+  function scriptOf(id){
+    return SCRIPTS.filter(function(s){ return s.id === blocks[id].scriptId; })[0];
+  }
+
+  function anchorFor(scriptId){
+    var s = SCRIPTS.filter(function(x){ return x.id === scriptId; })[0];
+    return s.anchor;
+  }
+
+  function slotPosition(scriptId, index){
+    var a = anchorFor(scriptId);
+    return { x: a.x, y: a.y + index * (BLOCK_H + GAP) };
+  }
+
+  function reflowChain(scriptId){
+    chains[scriptId].forEach(function(id, i){
+      var pos = slotPosition(scriptId, i);
+      blocks[id].el.style.left = pos.x + 'px';
+      blocks[id].el.style.top = pos.y + 'px';
+      blocks[id].el.style.transform = 'rotate(0deg)';
+    });
+    var anchorEl = document.getElementById('anchor-' + scriptId);
+    anchorEl.classList.toggle('hidden', chains[scriptId].length > 0);
+    updateRunState();
+  }
+
+  function updateRunState(){
+    var n = 0;
+    Object.keys(parentOf).forEach(function(id){ if (parentOf[id] !== null) n++; });
+    runBtn.disabled = n !== totalBlocks;
+  }
+
+  function setFeedback(msg, mode){
+    feedbackEl.textContent = msg;
+    feedbackEl.classList.remove('win','fail');
+    if (mode) feedbackEl.classList.add(mode);
+  }
+
+  function attachBlock(id, scriptId){
+    parentOf[id] = scriptId;
+    chains[scriptId].push(id);
+    reflowChain(scriptId);
+    var el = blocks[id].el;
+    el.classList.add('snap-pop');
+    setTimeout(function(){ el.classList.remove('snap-pop'); }, 230);
+    var n = 0;
+    Object.keys(parentOf).forEach(function(k){ if (parentOf[k] !== null) n++; });
+    setFeedback(n < totalBlocks
+      ? 'تمت إضافة القطعة — ' + n + ' / ' + totalBlocks
+      : 'كل القطع مرتبطة! اضغط تشغيل لاختبار لعبتك.', null);
+  }
+
+  function detachBlock(id, scatterFree){
+    var sId = parentOf[id];
+    if (!sId) return;
+    var arr = chains[sId];
+    var idx = arr.indexOf(id);
+    if (idx > -1) arr.splice(idx, 1);
+    parentOf[id] = null;
+    if (scatterFree){
+      var rect = { width: workspace.clientWidth || 900, height: 500 };
+      blocks[id].el.style.left = (12 + Math.random() * Math.max(20, rect.width - BLOCK_W - 24)) + 'px';
+      blocks[id].el.style.top = (rect.height - 150 + Math.random()*100) + 'px';
+      blocks[id].el.style.transform = 'rotate(' + (Math.random()*10-5).toFixed(1) + 'deg)';
+    }
+    reflowChain(sId);
+    setFeedback('تمت إزالة القطعة. أعد الترتيب وحاول مجددًا.', null);
+  }
+
+  // ---------- Drag ----------
+  var dragState = null;
+
+  function onPointerDown(ev, id, homeScriptId){
+    if (parentOf[id] !== null) detachBlock(id, false);
+    var el = blocks[id].el;
+    var rect = el.getBoundingClientRect();
+    var wrect = wsRect();
+    dragState = {
+      id: id,
+      offX: ev.clientX - rect.left,
+      offY: ev.clientY - rect.top
+    };
+    el.classList.add('dragging');
+    el.style.transform = 'rotate(0deg)';
+    el.setPointerCapture(ev.pointerId);
+    el.style.left = (rect.left - wrect.left + workspace.scrollLeft) + 'px';
+    el.style.top = (rect.top - wrect.top + workspace.scrollTop) + 'px';
+
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', onPointerUp);
+  }
+
+  function onPointerMove(ev){
+    if (!dragState) return;
+    var el = blocks[dragState.id].el;
+    var wrect = wsRect();
+    var x = ev.clientX - wrect.left + workspace.scrollLeft - dragState.offX;
+    var y = ev.clientY - wrect.top + workspace.scrollTop - dragState.offY;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+  }
+
+  function onPointerUp(ev){
+    if (!dragState) return;
+    var id = dragState.id;
+    var b = blocks[id];
+    var el = b.el;
+    el.classList.remove('dragging');
+    el.removeEventListener('pointermove', onPointerMove);
+    el.removeEventListener('pointerup', onPointerUp);
+
+    var curX = parseFloat(el.style.left);
+    var curY = parseFloat(el.style.top);
+    var isHat = b.def.type === 'hat';
+
+    var best = null, bestDist = Infinity;
+    SCRIPTS.forEach(function(s){
+      var target = slotPosition(s.id, chains[s.id].length);
+      var chainEmpty = chains[s.id].length === 0;
+      var valid = chainEmpty ? isHat : !isHat;
+      if (!valid) return;
+      var d = Math.hypot(curX - target.x, curY - target.y);
+      if (d < bestDist){ bestDist = d; best = s.id; }
+    });
+
+    if (best && bestDist < THRESHOLD){
+      attachBlock(id, best);
+    } else {
+      var nearAny = SCRIPTS.some(function(s){
+        var target = slotPosition(s.id, chains[s.id].length);
+        return Math.hypot(curX - target.x, curY - target.y) < THRESHOLD;
+      });
+      if (nearAny){
+        setFeedback(isHat ? 'قطعة البداية هذه تصلح فقط لبدء سكربت جديد فارغ.' : 'هذه القطعة لا يمكن أن تبدأ سكربتًا — جرّب مكانًا آخر.', 'fail');
+        shake(el);
+      }
+    }
+    dragState = null;
+  }
+
+  function shake(el){
+    var i = 0;
+    var iv = setInterval(function(){
+      el.style.transform = 'translateX(' + (i % 2 === 0 ? 6 : -6) + 'px)';
+      i++;
+      if (i > 4){ clearInterval(iv); el.style.transform = 'translateX(0)'; }
+    }, 60);
+  }
+
+  // ---------- Game engine ----------
+  function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+
+  var score = 0, basket = [];
+
+  function resetStage(){
+    score = 0; basket = [];
+    sprite.style.left = '50%';
+    sprite.style.visibility = 'hidden';
+    bubble.classList.remove('show');
+    broadcastPill.classList.remove('show');
+    scoreDisplay.textContent = 'النقاط: 0';
+    basketDisplay.textContent = '🧺: —';
+    marquee.textContent = 'ركّب القطع لتبدأ اللعب';
+  }
+
+  function flashBroadcast(text){
+    broadcastPill.textContent = '📣 ' + text;
+    broadcastPill.classList.add('show');
+    return delay(500).then(function(){ broadcastPill.classList.remove('show'); });
+  }
+
+  async function runAction(action){
+    switch(action.type){
+      case 'setvar':
+        score = action.value;
+        scoreDisplay.textContent = 'النقاط: ' + score;
+        await delay(150);
+        break;
+      case 'clearlist':
+        basket = [];
+        basketDisplay.textContent = '🧺: —';
+        await delay(150);
+        break;
+      case 'show':
+        sprite.style.visibility = 'visible';
+        marquee.textContent = 'اللعبة تعمل...';
+        await delay(200);
+        break;
+      case 'addlist':
+        basket.push(action.item);
+        basketDisplay.textContent = '🧺: ' + basket.join(' ');
+        sprite.style.left = (45 + Math.random()*10) + '%';
+        await delay(250);
+        break;
+      case 'changevar':
+        score += action.delta;
+        scoreDisplay.textContent = 'النقاط: ' + score;
+        scoreDisplay.style.transform = 'scale(1.3)';
+        await delay(120);
+        scoreDisplay.style.transform = 'scale(1)';
+        await delay(120);
+        break;
+      case 'say':
+        bubble.textContent = action.text;
+        bubble.classList.add('show');
+        await delay(action.secs * 1000);
+        bubble.classList.remove('show');
+        await delay(120);
+        break;
+      case 'broadcast':
+        await flashBroadcast(action.target === 'B' ? 'Collect' : 'Done');
+        await runChain(action.target);
+        break;
+    }
+  }
+
+  async function runChain(scriptId){
+    var arr = chains[scriptId];
+    for (var i = 0; i < arr.length; i++){
+      var def = blocks[arr[i]].def;
+      if (def.action) await runAction(def.action);
+    }
+  }
+
+  // Structural rules per script: hat always leads; a trailing broadcast block must
+  // come last (since it depends on the setup before it); everything between is
+  // logically independent and can be attached in any order.
+  var SCRIPT_RULES = {
+    A: { first:'hatA', last:'broadcast1', free:['setScore','clearList'] },
+    B: { first:'hatB', last:'broadcast2', free:['show','addItem','changeScore','say1'] },
+    C: { first:'hatC', last:null,         free:['say2'] }
+  };
+
+  function setEqual(a, b){
+    if (a.length !== b.length) return false;
+    var as = a.slice().sort(), bs = b.slice().sort();
+    for (var i = 0; i < as.length; i++){ if (as[i] !== bs[i]) return false; }
+    return true;
+  }
+
+  function scriptMatches(arr, rule){
+    var expectedLen = rule.free.length + (rule.first ? 1 : 0) + (rule.last ? 1 : 0);
+    if (arr.length !== expectedLen) return false;
+    var mid = arr.slice();
+    if (rule.first){
+      if (mid[0] !== rule.first) return false;
+      mid = mid.slice(1);
+    }
+    if (rule.last){
+      if (mid[mid.length - 1] !== rule.last) return false;
+      mid = mid.slice(0, -1);
+    }
+    return setEqual(mid, rule.free);
+  }
+
+  function checkWin(){
+    return SCRIPTS.every(function(s){
+      return scriptMatches(chains[s.id], SCRIPT_RULES[s.id]);
+    });
+  }
+
+  async function runScript(){
+    runBtn.disabled = true;
+    shuffleBtn.disabled = true;
+    resetStage();
+    setFeedback('...السكربت يعمل الآن', null);
+    await delay(300);
+
+    await runChain('A');
+    await delay(200);
+
+    if (checkWin()){
+      marquee.textContent = '🏆 لقد فزت!';
+      setFeedback('🎉 تم حل اللغز! كل السكربتات الثلاثة صحيحة.', 'win');
+      celebrate();
+    } else {
+      marquee.textContent = 'حاول مرة أخرى';
+      setFeedback('أحد السكربتات ليس بالترتيب الصحيح — تحقق من الثلاثة وأعد المحاولة!', 'fail');
+    }
+
+    var n = 0;
+    Object.keys(parentOf).forEach(function(k){ if (parentOf[k] !== null) n++; });
+    runBtn.disabled = n !== totalBlocks;
+    shuffleBtn.disabled = false;
+  }
+
+  function celebrate(){
+    var emojis = ['🎉','⭐','✨','🎊'];
+    for (var i = 0; i < 10; i++){
+      (function(){
+        var e = document.createElement('div');
+        e.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        e.style.position = 'absolute';
+        e.style.left = (20 + Math.random()*260) + 'px';
+        e.style.top = '-10px';
+        e.style.fontSize = (16 + Math.random()*14) + 'px';
+        e.style.transition = 'top 1.1s ease-in, opacity 1.1s ease-in';
+        e.style.zIndex = 30;
+        document.getElementById('stage').appendChild(e);
+        requestAnimationFrame(function(){ e.style.top = '300px'; e.style.opacity = '0'; });
+        setTimeout(function(){ e.remove(); }, 1200);
+      })();
+    }
+  }
+
+  // ---------- Init ----------
+  function fullReset(){
+    layoutLanes();
+    buildAnchorsAndLabels();
+    buildBlocks();
+    randomScatter();
+    resetStage();
+    SCRIPTS.forEach(function(s){ reflowChain(s.id); });
+    setFeedback('لا توجد قطع مرتبطة بعد.', null);
+  }
+
+  runBtn.addEventListener('click', runScript);
+  shuffleBtn.addEventListener('click', fullReset);
+  window.addEventListener('resize', function(){
+    layoutLanes();
+    SCRIPTS.forEach(function(s){
+      document.getElementById('anchor-' + s.id).style.left = s.anchor.x + 'px';
+      var lbl = workspace.querySelectorAll('.lane-label')[SCRIPTS.indexOf(s)];
+      if (lbl) lbl.style.left = s.anchor.x + 'px';
+      reflowChain(s.id);
+    });
+  });
+
+  fullReset();
+})();
+</script>
+</body>
+</html>

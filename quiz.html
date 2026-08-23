@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختبار سكراتش: My Blocks و Variables</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&family=Fira+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stage: #4d4d4d;
+    --paper: #fbfbf9;
+    --panel: #ffffff;
+    --ink: #2b2b2b;
+    --sub: #6b6b6b;
+
+    --variables: #FF8C1A;
+    --variables-dark: #DB6E00;
+    --myblocks: #FF6680;
+    --myblocks-dark: #FF3355;
+
+    --good: #59C059;
+    --good-dark: #389438;
+    --bad: #EE7D16;
+    --bad-dark: #CC5B00;
+
+    --notch: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 8%, #5a5a5a 0%, transparent 45%),
+      repeating-linear-gradient(0deg, #464646 0 1px, #4d4d4d 1px 26px),
+      repeating-linear-gradient(90deg, #464646 0 1px, #4d4d4d 1px 26px);
+    font-family: 'Tajawal', system-ui, sans-serif;
+    color: var(--ink);
+    padding: 28px 16px 60px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .wrap{ width:100%; max-width:640px; }
+
+  .titlebar{
+    background: var(--panel);
+    border-radius: 14px 14px 0 0;
+    padding: 18px 22px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    box-shadow: 0 2px 0 rgba(0,0,0,.15);
+  }
+  .cat-dot{ width:16px; height:16px; border-radius:50%; background:conic-gradient(var(--variables) 0 50%, var(--myblocks) 50% 100%); flex:none; }
+  .titlebar h1{
+    margin:0; font-size: 1.35rem; font-weight:800; letter-spacing:.2px;
+  }
+  .titlebar p{ margin:2px 0 0; font-size:.85rem; color:var(--sub); font-weight:500;}
+
+  .stagecard{
+    background: var(--paper);
+    border-radius: 0 0 14px 14px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  .progress-row{ display:flex; align-items:center; gap:10px; margin-bottom:18px; font-family:'Fira Mono', monospace; font-size:.8rem; color:var(--sub);}
+  .progress-track{ flex:1; height:10px; background:#e7e5df; border-radius:6px; overflow:hidden; }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--variables), var(--myblocks)); width:0%; transition: width .35s ease; }
+  .score-pill{ font-weight:700; color: var(--ink); background:#fff; border:2px solid #e7e5df; padding:2px 10px; border-radius:999px; }
+
+  .sblock{
+    position: relative;
+    border-radius: 9px;
+    padding: 16px 18px 16px 18px;
+    color:#fff;
+    font-weight:700;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18), 0 3px 6px rgba(0,0,0,.2);
+  }
+  .sblock::before{
+    content:"";
+    position:absolute;
+    top:-8px; right:22px;
+    width: 34px; height: 10px;
+    background: inherit;
+    border-radius: 6px 6px 0 0;
+  }
+  .sblock.q-variables{ background: var(--variables); }
+  .sblock.q-myblocks{ background: var(--myblocks); }
+
+  .cat-label{
+    display:inline-block; font-size:.7rem;
+    background: rgba(255,255,255,.28); padding: 2px 8px; border-radius: 5px; margin-bottom:8px; font-weight:800;
+    direction:ltr;
+  }
+  .qtext{ font-size:1.05rem; line-height:1.6; font-weight:700; }
+  .qnum{ opacity:.85; font-weight:800; margin-left:6px; }
+
+  .answers{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
+  .ans{
+    position:relative;
+    text-align:right;
+    background:#fff;
+    border:2px solid #d9d7cf;
+    border-radius: 8px;
+    padding: 12px 34px 12px 16px;
+    font-family:'Tajawal', sans-serif;
+    font-weight:600;
+    font-size:.96rem;
+    color: var(--ink);
+    cursor:pointer;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    width:100%;
+  }
+  .ans::before{
+    content:"";
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    width:10px; height:10px; border-radius:50%;
+    background: #d9d7cf;
+  }
+  .ans:hover:not(:disabled){ transform: translateX(-3px); border-color:#b8b6ac; }
+  .ans:focus-visible{ outline: 3px solid #4C97FF; outline-offset:2px; }
+  .ans:disabled{ cursor:default; }
+
+  .ans.correct{ border-color: var(--good-dark); background: #eafbea; }
+  .ans.correct::before{ background: var(--good); }
+  .ans.wrong{ border-color: var(--bad-dark); background: #fdeee2; }
+  .ans.wrong::before{ background: var(--bad); }
+  .ans.dim{ opacity:.55; }
+
+  .feedback{
+    margin-top: 14px;
+    font-size: .9rem;
+    font-weight:600;
+    padding: 10px 14px;
+    border-radius: 8px;
+    display:none;
+    line-height:1.6;
+  }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:#eafbea; color: var(--good-dark); border:2px solid var(--good); }
+  .feedback.wrong{ background:#fdeee2; color: var(--bad-dark); border:2px solid var(--bad); }
+
+  .nextbtn{
+    margin-top:16px;
+    display:none;
+    font-family:'Tajawal', sans-serif;
+    font-weight:800;
+    font-size: .95rem;
+    color:#fff;
+    background: var(--stage);
+    border:none;
+    padding: 10px 20px;
+    border-radius: 24px;
+    cursor:pointer;
+    box-shadow: 0 3px 0 #333;
+  }
+  .nextbtn:active{ transform: translateY(2px); box-shadow: 0 1px 0 #333; }
+  .nextbtn.show{ display:inline-block; }
+
+  .results{ display:none; text-align:center; }
+  .results.show{ display:block; }
+  .results .flag{
+    display:inline-block; background: linear-gradient(135deg, var(--variables), var(--myblocks));
+    color:#fff; font-weight:800; padding: 8px 20px; border-radius:999px; font-size:.85rem; margin-bottom:14px;
+  }
+  .results h2{ margin:0 0 6px; font-size:1.6rem; }
+  .results p{ color:var(--sub); font-weight:600; margin:0 0 20px; }
+  .bigscore{ font-family:'Fira Mono', monospace; font-size:2.6rem; font-weight:700; margin-bottom: 6px; }
+  .retrybtn{
+    font-family:'Tajawal', sans-serif; font-weight:800; font-size:.95rem; color:#fff;
+    background: var(--myblocks-dark); border:none; padding: 12px 26px; border-radius:24px; cursor:pointer;
+    box-shadow: 0 3px 0 #b31d3d; margin-top: 8px;
+  }
+  .retrybtn:active{ transform: translateY(2px); box-shadow: 0 1px 0 #b31d3d; }
+
+  .quizbody{ position:relative; }
+
+  footer{ text-align:center; margin-top: 16px; color:#b9b9b9; font-size:.72rem; font-family:'Fira Mono', monospace; direction:ltr; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="scratch.html" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;text-decoration:none;color:#CFD3EE;opacity:.85;margin-bottom:12px;">→ العودة إلى مسار سكراتش</a>
+
+  <div class="titlebar">
+    <div class="cat-dot"></div>
+    <div>
+      <h1>اختبار سكراتش</h1>
+      <p>My Blocks و Variables — ٦ أسئلة</p>
+    </div>
+  </div>
+
+  <div class="stagecard">
+    <div class="progress-row">
+      <span id="qcounter">السؤال ١ / ٦</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="score-pill" id="scorePill">النتيجة: ٠</span>
+    </div>
+
+    <div class="quizbody" id="quizArea" aria-live="polite"></div>
+
+    <div class="results" id="results">
+      <span class="flag">انتهى الاختبار</span>
+      <div class="bigscore" id="finalScore">0 / 6</div>
+      <h2 id="resultTitle">أحسنت!</h2>
+      <p id="resultSub">إليك نتيجتك.</p>
+      <button class="retrybtn" id="retryBtn">إعادة المحاولة</button>
+    </div>
+  </div>
+
+  <footer>انقر على block للإجابة · استخدم Tab + Enter للتنقل بالكيبورد</footer>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    cat: "variables",
+    text: "تنقر على راية البداية الخضراء، وتريد أن تظهر فقاعة كلام على القطة برقم النقاط، ويزداد هذا الرقم ١ في كل مرة تلمس فيها عملة. ما الذي تحتاجه لتحقيق ذلك؟",
+    options: [
+      "variable لتخزين النقاط",
+      "My Block باسم 'coin'",
+      "block لتغيير الشكل (Costume)",
+      "block تأثير صوتي"
+    ],
+    correct: 0,
+    why: "أي قيمة تتغيّر وتتراكم مع الوقت تحتاج إلى variable يخزّنها ويحدّثها."
+  },
+  {
+    cat: "myblocks",
+    text: "لاحظت أنك تسحب نفس الخمس blocks معًا في أكثر من نص برمجي لجعل الشخصية تقفز. ما هو أفضل حل؟",
+    options: [
+      "إضافة شخصيات جديدة",
+      "تجميع هذه الـ blocks الخمس في My Block باسم 'jump'",
+      "إنشاء variable جديد لكل نص برمجي",
+      "حذف النصوص المكررة والأمل أن يعمل كل شيء"
+    ],
+    correct: 1,
+    why: "My Blocks تتيح لك تجميع سلسلة متكررة من الـ blocks مرة واحدة، ثم إعادة استخدامها في أي مكان."
+  },
+  {
+    cat: "variables",
+    text: "ماذا تفعل block 'set [score] to 0'؟",
+    options: [
+      "تحذف variable النقاط",
+      "تضيف ١ إلى النقاط",
+      "تعطي variable النقاط قيمة بداية تساوي 0",
+      "تنشئ My Block جديدة"
+    ],
+    correct: 2,
+    why: "block 'set' تحدد قيمة دقيقة للـ variable — هنا تعيد ضبط النقاط إلى 0."
+  },
+  {
+    cat: "myblocks",
+    text: "هل يمكن لـ My Block أن تحتوي داخلها على My Block أخرى؟",
+    options: [
+      "لا، لا يمكن تداخل الـ blocks أبدًا",
+      "فقط إذا كانت block variable",
+      "نعم — يمكن لـ My Blocks أن تستدعي My Blocks أخرى",
+      "فقط في فئة الصوت"
+    ],
+    correct: 2,
+    why: "يمكن لـ My Blocks أن تستدعي بعضها البعض، مما يتيح بناء أجزاء صغيرة قابلة لإعادة الاستخدام ثم دمجها في blocks أكبر."
+  },
+  {
+    cat: "variables",
+    text: "ما الفرق بين block 'change [score] by 1' و block 'set [score] to 1'؟",
+    options: [
+      "لا فرق، تؤديان نفس الشيء تمامًا",
+      "'change' تضيف إلى القيمة الحالية، أما 'set' فتستبدلها بالقيمة 1",
+      "'change' تعمل فقط مع القوائم",
+      "'set' يمكن استخدامها مرة واحدة فقط في كل نص برمجي"
+    ],
+    correct: 1,
+    why: "'change' تزيد القيمة الحالية، بينما 'set' تستبدل القيمة بالكامل برقم ثابت."
+  },
+  {
+    cat: "myblocks",
+    text: "تبني لعبة منصات (platformer) وتحتاج إلى إجراء 'إعادة ظهور اللاعب' يُستخدم في ٣ نصوص برمجية مختلفة عند سقوط اللاعب خارج الشاشة. ما هو الحل الأنسب؟",
+    options: [
+      "نسخ ولصق blocks إعادة الظهور في النصوص الثلاثة",
+      "إنشاء My Block باسم 'respawn player' واستدعاؤها من كل نص برمجي",
+      "تخزين منطق إعادة الظهور داخل variable",
+      "دمج النصوص الثلاثة في نص برمجي واحد ضخم"
+    ],
+    correct: 1,
+    why: "الـ My Block تجمع المنطق في مكان واحد — عدّلها مرة واحدة، وكل نص برمجي يستدعيها يتحدّث تلقائيًا."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+
+const quizArea = document.getElementById('quizArea');
+const results = document.getElementById('results');
+const progressFill = document.getElementById('progressFill');
+const qcounter = document.getElementById('qcounter');
+const scorePill = document.getElementById('scorePill');
+
+const ARABIC_DIGITS = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+function toArabicNum(n){ return String(n).split('').map(d => ARABIC_DIGITS[+d] ?? d).join(''); }
+
+function catLabel(cat){ return cat === 'variables' ? 'Variables' : 'My Blocks'; }
+function catClass(cat){ return cat === 'variables' ? 'q-variables' : 'q-myblocks'; }
+
+function render(){
+  const q = QUESTIONS[current];
+  answered = false;
+  qcounter.textContent = `السؤال ${toArabicNum(current+1)} / ${toArabicNum(QUESTIONS.length)}`;
+  progressFill.style.width = `${(current/QUESTIONS.length)*100}%`;
+  scorePill.textContent = `النتيجة: ${toArabicNum(score)}`;
+
+  const optionsHtml = q.options.map((opt, i) => `
+    <button class="ans" data-idx="${i}" tabindex="0">${opt}</button>
+  `).join('');
+
+  quizArea.innerHTML = `
+    <div class="sblock ${catClass(q.cat)}">
+      <span class="cat-label">${catLabel(q.cat)}</span>
+      <div class="qtext"><span class="qnum">${toArabicNum(current+1)}.</span>${q.text}</div>
+    </div>
+    <div class="answers">${optionsHtml}</div>
+    <div class="feedback" id="feedback" role="status"></div>
+    <button class="nextbtn" id="nextBtn">${current === QUESTIONS.length - 1 ? 'عرض النتيجة' : 'السؤال التالي'} &larr;</button>
+  `;
+
+  const buttons = quizArea.querySelectorAll('.ans');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => selectAnswer(parseInt(btn.dataset.idx), buttons, q));
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    current++;
+    if(current < QUESTIONS.length){ render(); }
+    else { showResults(); }
+  });
+}
+
+function selectAnswer(idx, buttons, q){
+  if(answered) return;
+  answered = true;
+  const isCorrect = idx === q.correct;
+  if(isCorrect) score++;
+
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if(i === q.correct) btn.classList.add('correct');
+    else if(i === idx) btn.classList.add('wrong');
+    else btn.classList.add('dim');
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.classList.add('show', isCorrect ? 'correct' : 'wrong');
+  fb.textContent = (isCorrect ? '✓ إجابة صحيحة — ' : '✗ ليست صحيحة — ') + q.why;
+
+  scorePill.textContent = `النتيجة: ${toArabicNum(score)}`;
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+function showResults(){
+  progressFill.style.width = '100%';
+  qcounter.textContent = `السؤال ${toArabicNum(QUESTIONS.length)} / ${toArabicNum(QUESTIONS.length)}`;
+  quizArea.style.display = 'none';
+  results.classList.add('show');
+  document.getElementById('finalScore').textContent = `${toArabicNum(score)} / ${toArabicNum(QUESTIONS.length)}`;
+
+  let title, sub;
+  if(score === QUESTIONS.length){ title = "نتيجة كاملة!"; sub = "أتقنت My Blocks و Variables تمامًا."; }
+  else if(score >= QUESTIONS.length * 0.75){ title = "عمل رائع!"; sub = "لديك فهم قوي لهذا الموضوع."; }
+  else if(score >= QUESTIONS.length * 0.5){ title = "بداية جيدة"; sub = "بعض التمرين الإضافي على My Blocks و Variables سيساعدك."; }
+  else { title = "واصل التمرين"; sub = "راجع My Blocks و Variables في سكراتش، ثم أعد المحاولة."; }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSub').textContent = sub;
+}
+
+document.getElementById('retryBtn').addEventListener('click', () => {
+  current = 0; score = 0;
+  results.classList.remove('show');
+  quizArea.style.display = 'block';
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
